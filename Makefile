@@ -1,6 +1,11 @@
 FREQUENCY = 50
 STRATEGY = TIMING
-RISCV = bla # Not needed, use spike-git package
+
+# Install the spike-git package and add ~/lib/libfesvr.a and ~/lib/libriscv.so as links to the
+# respective files in that package. RISCV can't be left empty as otherwise "make drive" will
+# complain.
+RISCV = ~
+
 FIRESIM_ENV_SOURCED = 1
 FIRESIM = ./chipyard/sims/firesim
 PLATFORM = rhsresearch_nitefury_ii
@@ -24,26 +29,26 @@ DTS = $(FIRESIM)/sim/generated-src/$(PLATFORM)/$(QUINTUPLET)/firesim.firesim.Fir
 
 all: driver
 
-setup: #clean
-	#git clone git@github.com:ucb-bar/chipyard.git
-	#cd chipyard; git checkout -b 1.12.3 1.12.3
-	#cd chipyard; git submodule update --init generators/bar-fetchers generators/boom generators/caliptra-aes-acc generators/constellation generators/diplomacy generators/fft-generator generators/hardfloat  generators/ibex generators/icenet generators/mempress generators/rocc-acc-utils generators/rocket-chip generators/rocket-chip-blocks generators/rocket-chip-inclusive-cache generators/shuttle generators/riscv-sodor generators/testchipip sims/firesim tools/cde 
-	#cd chipyard; git submodule update --init generators/ara generators/compress-acc generators/cva6 generators/gemmini generators/nvdla generators/rerocc generators/saturn
-	#cd chipyard/sims/firesim && git submodule update --init platforms/rhsresearch_nitefury_ii/NiteFury-and-LiteFury-firesim
-	#cd chipyard; git submodule update --init --recursive tools/dsptools tools/fixedpoint tools/rocket-dsp-utils
-	#cd chipyard; git submodule update --init --recursive tools/dsptools-chisel3 tools/fixedpoint-chisel3
+setup: clean
+	git clone git@github.com:ucb-bar/chipyard.git
+	cd chipyard; git checkout -b 1.12.3 1.12.3
+	cd chipyard; git submodule update --init generators/bar-fetchers generators/boom generators/caliptra-aes-acc generators/constellation generators/diplomacy generators/fft-generator generators/hardfloat  generators/ibex generators/icenet generators/mempress generators/rocc-acc-utils generators/rocket-chip generators/rocket-chip-blocks generators/rocket-chip-inclusive-cache generators/shuttle generators/riscv-sodor generators/testchipip sims/firesim tools/cde 
+	cd chipyard; git submodule update --init generators/ara generators/compress-acc generators/cva6 generators/gemmini generators/nvdla generators/rerocc generators/saturn
+	cd chipyard/sims/firesim && git submodule update --init platforms/rhsresearch_nitefury_ii/NiteFury-and-LiteFury-firesim
+	cd chipyard; git submodule update --init --recursive tools/dsptools tools/fixedpoint tools/rocket-dsp-utils
+	cd chipyard; git submodule update --init --recursive tools/dsptools-chisel3 tools/fixedpoint-chisel3
 
-driver: generate_env add_borg $(DRIVER)
+driver: generate_env patch_borg patch_tracerv $(DRIVER)
 $(SV) $(DRIVER):
 	$(MAKE) -j $(shell nproc) -C $(FIRESIM)/sim RISCV=$(RISCV) FIRESIM_ENV_SOURCED=$(FIRESIM_ENV_SOURCED) PLATFORM=$(PLATFORM) TARGET_PROJECT=$(TARGET_PROJECT) DESIGN=$(DESIGN) TARGET_CONFIG=$(TARGET_CONFIG) PLATFORM_CONFIG=$(PLATFORM_CONFIG) replace-rtl
 
 generate_env:
 	./generate_env.sh
-
-add_borg:
-	./add_borg.sh
-
+patch_borg:
+	patch -d chipyard -p1 < borg.patch
+patch_tracerv:
+	patch -d chipyard/sims/firesim -p1 < tracerv.patch
 clean:
 	rm -rf chipyard
 
-.PHONY: add_borg all clean driver generate_env setup touch
+.PHONY: add_borg all clean driver generate_env patch_tracerv setup touch

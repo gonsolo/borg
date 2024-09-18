@@ -1,0 +1,155 @@
+diff --git a/sim/firesim-lib/src/main/cc/bridges/tracerv/tracerv_dwarf.cc b/sim/firesim-lib/src/main/cc/bridges/tracerv/tracerv_dwarf.cc
+index 8665643f5..b829f13c7 100644
+--- a/sim/firesim-lib/src/main/cc/bridges/tracerv/tracerv_dwarf.cc
++++ b/sim/firesim-lib/src/main/cc/bridges/tracerv/tracerv_dwarf.cc
+@@ -41,46 +41,46 @@ private:
+   Dwarf_Debug dbg;
+ };
+ 
+-dwarf_t::dwarf_t(Elf *elf) {
+-  Dwarf_Error err;
+-  if (dwarf_elf_init(
+-          elf, DW_DLC_READ, &dwarf_runtime_error, nullptr, &this->dbg, &err) !=
+-      DW_DLV_OK) {
+-    this->dbg = nullptr;
+-  }
+-}
++//dwarf_t::dwarf_t(Elf *elf) {
++//  Dwarf_Error err;
++//  if (dwarf_elf_init(
++//          elf, DW_DLC_READ, &dwarf_runtime_error, nullptr, &this->dbg, &err) !=
++//      DW_DLV_OK) {
++//    this->dbg = nullptr;
++//  }
++//}
+ 
+ void dwarf_t::subroutines(subroutine_map &table) {
+   if (this->dbg == nullptr) {
+     return;
+   }
+   Dwarf_Unsigned next_cu_offset;
+-  while (dwarf_next_cu_header_c(this->dbg,
+-                                1,       // is_info
+-                                nullptr, // cu_header_length
+-                                nullptr, // version_stamp
+-                                nullptr, // abbrev_offset
+-                                nullptr, // address_size
+-                                nullptr, // offset_size
+-                                nullptr, // extension_size
+-                                nullptr, // signature
+-                                nullptr, // typeoffset
+-                                &next_cu_offset,
+-                                nullptr) == DW_DLV_OK) {
+-
+-    // Expect CU to have an initial DIE
+-    Dwarf_Die die;
+-    if (dwarf_siblingof(this->dbg, nullptr, &die, nullptr) != DW_DLV_OK) {
+-      continue;
+-    }
+-    die_ptr die_wrap(die, dwarf_deleter(dbg));
+-
+-    if (dwarf_child(die, &die, nullptr) == DW_DLV_OK) {
+-      die_wrap = die_ptr(die, dwarf_deleter(dbg));
+-      // Enumerate subprograms
+-      this->siblings(std::move(die_wrap), &dwarf_t::die_subprogram, table);
+-    }
+-  }
++//  while (dwarf_next_cu_header_c(this->dbg,
++//                                1,       // is_info
++//                                nullptr, // cu_header_length
++//                                nullptr, // version_stamp
++//                                nullptr, // abbrev_offset
++//                                nullptr, // address_size
++//                                nullptr, // offset_size
++//                                nullptr, // extension_size
++//                                nullptr, // signature
++//                                nullptr, // typeoffset
++//                                &next_cu_offset,
++//                                nullptr) == DW_DLV_OK) {
++//
++//    // Expect CU to have an initial DIE
++//    Dwarf_Die die;
++//    if (dwarf_siblingof(this->dbg, nullptr, &die, nullptr) != DW_DLV_OK) {
++//      continue;
++//    }
++//    die_ptr die_wrap(die, dwarf_deleter(dbg));
++//
++//    if (dwarf_child(die, &die, nullptr) == DW_DLV_OK) {
++//      die_wrap = die_ptr(die, dwarf_deleter(dbg));
++//      // Enumerate subprograms
++//      this->siblings(std::move(die_wrap), &dwarf_t::die_subprogram, table);
++//    }
++//  }
+ }
+ 
+ // Traverse siblings of a given DIE
+@@ -88,15 +88,15 @@ template <typename T>
+ void dwarf_t::siblings(die_ptr die,
+                        void (dwarf_t::*fn)(Dwarf_Die, T &),
+                        T &arg) {
+-  for (;;) {
+-    Dwarf_Die p = die.get();
+-
+-    (this->*fn)(p, arg);
+-    if (dwarf_siblingof(this->dbg, p, &p, nullptr) != DW_DLV_OK) {
+-      return;
+-    }
+-    die = die_ptr(p, dwarf_deleter(dbg));
+-  }
++//  for (;;) {
++//    Dwarf_Die p = die.get();
++//
++//    (this->*fn)(p, arg);
++//    if (dwarf_siblingof(this->dbg, p, &p, nullptr) != DW_DLV_OK) {
++//      return;
++//    }
++//    die = die_ptr(p, dwarf_deleter(dbg));
++//  }
+ }
+ 
+ void dwarf_t::die_callsite(Dwarf_Die die, std::vector<callsite_t> &table) {
+diff --git a/sim/firesim-lib/src/main/cc/bridges/tracerv/tracerv_dwarf.h b/sim/firesim-lib/src/main/cc/bridges/tracerv/tracerv_dwarf.h
+index 34ea4d87c..b407d68c4 100644
+--- a/sim/firesim-lib/src/main/cc/bridges/tracerv/tracerv_dwarf.h
++++ b/sim/firesim-lib/src/main/cc/bridges/tracerv/tracerv_dwarf.h
+@@ -34,10 +34,10 @@ const subroutine_t *subroutine_find(const subroutine_map &, uint64_t);
+ 
+ class dwarf_t {
+ public:
+-  dwarf_t(Elf *);
++  //dwarf_t(Elf *);
+   virtual ~dwarf_t(void) {
+     if (this->dbg) {
+-      dwarf_finish(this->dbg, nullptr);
++      //dwarf_finish(this->dbg, nullptr);
+     }
+   }
+ 
+diff --git a/sim/firesim-lib/src/main/cc/bridges/tracerv/tracerv_elf.cc b/sim/firesim-lib/src/main/cc/bridges/tracerv/tracerv_elf.cc
+index 1f03202ed..8d48894b1 100644
+--- a/sim/firesim-lib/src/main/cc/bridges/tracerv/tracerv_elf.cc
++++ b/sim/firesim-lib/src/main/cc/bridges/tracerv/tracerv_elf.cc
+@@ -75,8 +75,8 @@ void *elf_t::section_data(const char *name, size_t *size) {
+ 
+ std::pair<uint64_t, uint64_t> elf_t::subroutines(subroutine_map &table) {
+   {
+-    dwarf_t dwarf(this->elf);
+-    dwarf.subroutines(table);
++    //dwarf_t dwarf(this->elf);
++    //dwarf.subroutines(table);
+   }
+ 
+   size_t shnum;
+diff --git a/sim/midas/src/main/cc/Makefile b/sim/midas/src/main/cc/Makefile
+index 275fe23a1..12ca70fb7 100644
+--- a/sim/midas/src/main/cc/Makefile
++++ b/sim/midas/src/main/cc/Makefile
+@@ -20,7 +20,7 @@ r_dir = $(abspath ../resources)
+ PLATFORM ?= f1
+ OUT_DIR ?= $(GEN_DIR)
+ 
+-override CXXFLAGS += -Wall -I$(midas_dir) -I$(GEN_DIR)
++override CXXFLAGS += -Wall -I$(midas_dir) -I$(GEN_DIR) -I/usr/include/libdwarf/libdwarf-0
+ override LDFLAGS += -L$(GEN_DIR) -lstdc++ -lpthread -lgmp -lrt
+ 
+ DESIGN_V  ?= $(GEN_DIR)/$(GEN_FILE_BASENAME).sv
