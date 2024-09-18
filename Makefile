@@ -79,7 +79,8 @@ program_device:
 
 ####################################################################################################
 
-clean:
-	rm -rf chipyard
+clean: clean_logs
+	rm -rf chipyard project project.cache
+	rm -f out.mcs $(MCS) out.prm project.srcs
 
-.PHONY: add_borg all clean driver generate_env mcs patch_tracerv setup touch
+.PHONY: add_borg all clean clean_logs driver generate_env mcs patch_tracerv setup touch
