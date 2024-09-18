@@ -49,10 +49,11 @@ SUBMODULES = generators/bar-fetchers generators/boom generators/caliptra-aes-acc
 	     generators/cva6 generators/gemmini generators/nvdla generators/rerocc generators/saturn
 SUBMODULES_RECURSIVE = tools/dsptools tools/fixedpoint tools/rocket-dsp-utils \
 		       tools/dsptools-chisel3 tools/fixedpoint-chisel3
+CHIPYARD_VERSION = 1.12.3
 
 setup: clean
 	git clone git@github.com:ucb-bar/chipyard.git
-	cd chipyard; git checkout -b 1.12.3 1.12.3
+	cd chipyard; git checkout -b $(CHIPYARD_VERSION) $(CHIPYARD_VERSION)
 	cd chipyard; git submodule update --init $(SUBMODULES)
 	cd chipyard/sims/firesim && git submodule update --init \
 		platforms/rhsresearch_nitefury_ii/NiteFury-and-LiteFury-firesim
