@@ -40,7 +40,7 @@ setup: clean
 	cd chipyard; git submodule update --init --recursive tools/dsptools tools/fixedpoint tools/rocket-dsp-utils
 	cd chipyard; git submodule update --init --recursive tools/dsptools-chisel3 tools/fixedpoint-chisel3
 
-# Driver ###########################################################################################
+# Build Driver #####################################################################################
 
 driver: generate_env patch_borg patch_tracerv $(DRIVER)
 $(SV) $(DRIVER):
@@ -53,7 +53,7 @@ patch_borg:
 patch_tracerv:
 	patch -d chipyard/sims/firesim -p1 < tracerv.patch
 
-# MCS #############################################################################################
+# Build MCS ########################################################################################
 
 PROJECT_0 = $(FIRESIM)/platforms/$(PLATFORM)/NiteFury-and-LiteFury-firesim/Sample-Projects/Project-0
 HDL = project.srcs/sources_1/imports/HDL
@@ -72,7 +72,12 @@ $(MCS): $(DRIVER)
 clean_logs:
 	rm -f *.jou *.log
 
-###################################################################################################
+# Flash FPGA #######################################################################################
+
+program_device:
+	vivado_lab -mode tcl -source program.tcl
+
+####################################################################################################
 
 clean:
 	rm -rf chipyard
