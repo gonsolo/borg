@@ -29,6 +29,8 @@ DTS = $(FIRESIM)/sim/generated-src/$(PLATFORM)/$(QUINTUPLET)/firesim.firesim.Fir
 
 all: driver
 
+# Setup ###########################################################################################
+
 setup: clean
 	git clone git@github.com:ucb-bar/chipyard.git
 	cd chipyard; git checkout -b 1.12.3 1.12.3
@@ -37,6 +39,8 @@ setup: clean
 	cd chipyard/sims/firesim && git submodule update --init platforms/rhsresearch_nitefury_ii/NiteFury-and-LiteFury-firesim
 	cd chipyard; git submodule update --init --recursive tools/dsptools tools/fixedpoint tools/rocket-dsp-utils
 	cd chipyard; git submodule update --init --recursive tools/dsptools-chisel3 tools/fixedpoint-chisel3
+
+# Driver ###########################################################################################
 
 driver: generate_env patch_borg patch_tracerv $(DRIVER)
 $(SV) $(DRIVER):
@@ -48,7 +52,29 @@ patch_borg:
 	patch -d chipyard -p1 < borg.patch
 patch_tracerv:
 	patch -d chipyard/sims/firesim -p1 < tracerv.patch
+
+# MCS #############################################################################################
+
+PROJECT_0 = $(FIRESIM)/platforms/$(PLATFORM)/NiteFury-and-LiteFury-firesim/Sample-Projects/Project-0
+HDL = project.srcs/sources_1/imports/HDL
+PROJECT_0_HDL = $(PROJECT_0)/cl_firesim/Nitefury-II/project/$(HDL)
+
+mcs: $(MCS)
+$(MCS): $(DRIVER)
+	ln -sf $(PROJECT_0)/cl_$(QUINTUPLET)/Nitefury-II/project/project.srcs .
+	cp $(PROJECT_0)/cl_firesim/common/HDL/CodeBlinker.v $(HDL)
+	cp $(PROJECT_0_HDL)/firesim_wrapper.v $(HDL)
+	cp $(PROJECT_0_HDL)/dna_reader.v $(HDL)
+	cp $(PROJECT_0_HDL)/user_efuse.v $(HDL)
+
+	vivado -mode batch -source top.tcl -tclargs $(FREQUENCY) $(STRATEGY)
+
+clean_logs:
+	rm -f *.jou *.log
+
+###################################################################################################
+
 clean:
 	rm -rf chipyard
 
-.PHONY: add_borg all clean driver generate_env patch_tracerv setup touch
+.PHONY: add_borg all clean driver generate_env mcs patch_tracerv setup touch

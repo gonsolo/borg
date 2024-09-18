@@ -1,2 +1,8 @@
 chipyard
 .metals
+project
+project.srcs
+project.cache
+out.prm
+out.mcs
+out.bin
