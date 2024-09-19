@@ -34,13 +34,15 @@ all: help
 
 help:
 	@echo "Targets:"
-	@echo "#      command         description 						needs"
-	@echo "1.     setup:          Clone all repositories and set them up. 			-"
-	@echo "2.     chipyard_patch: Patch chipyard with Borg. 				setup"
-	@echo "2.     driver:         Build the driver that's used to run the simulation. 	chipyard_patch"
-	@echo "3.     mcs:            Build the bin file that's used to flash the FPGA.FPG 	chipyard_patch"
-	@echo "4.     program_device: Flash the FPGA with the hex file. 			mcs"
-	@echo "Other: clean:          Clean up everything."
+	@echo "#      command    		description 						needs"
+	@echo "1.     setup:     		Clone all repositories and set them up. 		-"
+	@echo "2.     chipyard_pa		Patch chipyard with Borg. 				setup"
+	@echo "3.     driver:    		Build the driver that's used to run the simulation. 	chipyard_patch"
+	@echo "4.     mcs:       		Build the bin file that's used to flash the FPGA.FPG 	chipyard_patch"
+	@echo "5.     program_dev		Flash the FPGA with the hex file. 			mcs"
+	@echo "6.     dma_ip_drivers_install: 	Install XDMA drivers. 					setup"
+	@echo "7.     xdma: 			Load xmda drivers. 					dma_ip_drivers_install"
+	@echo "Other: clean:     		Clean up everything."
 
 # Setup ###########################################################################################
 
@@ -55,7 +57,9 @@ SUBMODULES_RECURSIVE = tools/dsptools tools/fixedpoint tools/rocket-dsp-utils \
 		       tools/dsptools-chisel3 tools/fixedpoint-chisel3
 CHIPYARD_VERSION = 1.12.3
 
-setup: clean
+setup: chipyard_setup dma_ip_drivers_setup
+
+chipyard_setup: chipyard_clean
 	git clone git@github.com:ucb-bar/chipyard.git
 	cd chipyard; git checkout -b $(CHIPYARD_VERSION) $(CHIPYARD_VERSION)
 	cd chipyard; git submodule update --init $(SUBMODULES)
@@ -70,6 +74,22 @@ ls_driver:
 
 edit_dts:
 	vi $(DTS)
+
+# XDMA ############################################################################################
+
+dma_ip_drivers_setup:
+	git clone git@github.com:gonsolo/dma_ip_drivers.git
+	cd dma_ip_drivers; git checkout gonsolo
+
+dma_ip_drivers_install:
+	cd dma_ip_drivers/xdma/xdma; sudo make -j20 clean install
+
+xdma:
+ifneq ($(shell lsmod|grep xdma)xxx, xxx)
+	sudo rmmod xdma
+endif
+	sudo modprobe xdma poll_mode=1 interrupt_mode=2
+	sudo chmod a+rw /dev/xdma0_*
 
 # Build Driver #####################################################################################
 
@@ -122,9 +142,12 @@ program_device:
 
 ####################################################################################################
 
-clean: clean_logs
+chipyard_clean:
 	rm -rf chipyard project project.cache
 	rm -f out.mcs $(MCS) out.prm project.srcs
 
-.PHONY: add_borg all chipyard_patch chipyard_reset clean clean_logs edit_dts driver generate_env \
-	ls_driver mcs patch_borg patch_borg_reverse patch_tracerv patch_tracerv_reverse setup touch
+clean: chipyard_clean clean_logs
+
+.PHONY: add_borg all chipyard_clean chipyard_patch chipyard_reset clean clean_logs \
+	dma_ip_drivers_setup edit_dts driver generate_env ls_driver mcs patch_borg \
+	patch_borg_reverse patch_tracerv patch_tracerv_reverse setup touch xdma
