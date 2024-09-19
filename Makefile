@@ -34,8 +34,9 @@ help:
 	@echo "Targets:"
 	@echo "#      command         description 						needs"
 	@echo "1.     setup:          Clone all repositories and set them up. 			-"
-	@echo "2.     driver:         Build the driver that's used to run the simulation. 	setup"
-	@echo "3.     mcs:            Build the bin file that's used to flash the FPGA.FPG 	setup"
+	@echo "2.     chipyard_patch: Patch chipyard with Borg. 				setup"
+	@echo "2.     driver:         Build the driver that's used to run the simulation. 	chipyard_patch"
+	@echo "3.     mcs:            Build the bin file that's used to flash the FPGA.FPG 	chipyard_patch"
 	@echo "4.     program_device: Flash the FPGA with the hex file. 			mcs"
 	@echo "Other: clean:          Clean up everything."
 
