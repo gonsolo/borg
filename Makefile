@@ -1,4 +1,4 @@
-FREQUENCY = 50
+FEQUENCY = 50
 STRATEGY = TIMING
 
 # Install the spike-git package and add ~/lib/libfesvr.a and ~/lib/libriscv.so as links to the
@@ -7,7 +7,9 @@ STRATEGY = TIMING
 RISCV = ~
 
 FIRESIM_ENV_SOURCED = 1
-FIRESIM = ./chipyard/sims/firesim
+SIMS = ./chipyard/sims
+FIRESIM = $(SIMS)/firesim
+FIRESIM_STAGING = $(SIMS)/firesim-staging
 PLATFORM = rhsresearch_nitefury_ii
 TARGET_PROJECT = firesim
 DESIGN = FireSim
@@ -26,7 +28,7 @@ DRIVER =$(FIRESIM)/sim/output/$(PLATFORM)/$(QUINTUPLET)/FireSim-rhsresearch_nite
 MCS = out.bin
 
 # The device tree
-DTS = $(FIRESIM)/sim/generated-src/$(PLATFORM)/$(QUINTUPLET)/firesim.firesim.FireSim.BorgConfig.dts
+DTS = $(FIRESIM_STAGING)/generated-src/firesim.firesim.FireSim.BorgConfig/firesim.firesim.FireSim.BorgConfig.dts
 
 all: help
 
@@ -60,6 +62,14 @@ setup: clean
 	cd chipyard/sims/firesim && git submodule update --init \
 		platforms/rhsresearch_nitefury_ii/NiteFury-and-LiteFury-firesim
 	cd chipyard; git submodule update --init --recursive $(SUBMODULES_RECURSIVE)
+
+# Miscellaneous ####################################################################################
+
+ls_driver:
+	ls -lh $(DRIVER)
+
+edit_dts:
+	vi $(DTS)
 
 # Build Driver #####################################################################################
 
@@ -116,5 +126,5 @@ clean: clean_logs
 	rm -rf chipyard project project.cache
 	rm -f out.mcs $(MCS) out.prm project.srcs
 
-.PHONY: add_borg all chipyard_patch chipyard_reset clean clean_logs driver generate_env mcs patch_borg patch_borg_reverse \
-	patch_tracerv patch_tracerv_reverse setup touch
+.PHONY: add_borg all chipyard_patch chipyard_reset clean clean_logs edit_dts driver generate_env \
+	ls_driver mcs patch_borg patch_borg_reverse patch_tracerv patch_tracerv_reverse setup touch
