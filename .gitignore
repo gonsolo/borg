@@ -6,3 +6,5 @@ project.cache
 out.prm
 out.mcs
 out.bin
+*.jou
+*.log

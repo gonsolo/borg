@@ -247,3 +247,16 @@ index 832c9c89..b84ca679 100644
 +class BorgConfig extends Config(
 +  new borg.WithBorg ++
 +  new FireSimRocket1GiBDRAMConfig)
+diff --git a/generators/chipyard/src/main/scala/DigitalTop.scala b/generators/chipyard/src/main/scala/DigitalTop.scala
+index c4fa17aa..a3697e7f 100644
+--- a/generators/chipyard/src/main/scala/DigitalTop.scala
++++ b/generators/chipyard/src/main/scala/DigitalTop.scala
+@@ -40,6 +40,7 @@ class DigitalTop(implicit p: Parameters) extends ChipyardSystem
+   with fftgenerator.CanHavePeripheryFFT // Enables optionally having an MMIO-based FFT block
+   with constellation.soc.CanHaveGlobalNoC // Support instantiating a global NoC interconnect
+   with rerocc.CanHaveReRoCCTiles // Support tiles that instantiate rerocc-attached accelerators
++  with borg.CanHavePeripheryBorg // Enables optionally adding gonsolo's Borg
+ {
+   override lazy val module = new DigitalTopModule(this)
+ }
+

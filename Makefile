@@ -73,8 +73,12 @@ generate_env:
 	./generate_env.sh
 patch_borg:
 	patch -d chipyard -p1 < borg.patch
+patch_borg_reverse:
+	patch -d chipyard -R -p1 < borg.patch
 patch_tracerv:
 	patch -d chipyard/sims/firesim -p1 < tracerv.patch
+patch_tracerv_reverse:
+	patch -d chipyard/sims/firesim -R -p1 < tracerv.patch
 
 # Build MCS ########################################################################################
 
@@ -106,4 +110,5 @@ clean: clean_logs
 	rm -rf chipyard project project.cache
 	rm -f out.mcs $(MCS) out.prm project.srcs
 
-.PHONY: add_borg all clean clean_logs driver generate_env mcs patch_tracerv setup touch
+.PHONY: add_borg all clean clean_logs driver generate_env mcs patch_borg patch_borg_reverse \
+	patch_tracerv patch_tracerv_reverse setup touch
