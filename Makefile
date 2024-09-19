@@ -7,7 +7,9 @@ STRATEGY = TIMING
 RISCV = ~
 
 FIRESIM_ENV_SOURCED = 1
-SIMS = ./chipyard/sims
+
+CHIPYARD = ./chipyard
+SIMS = $(CHIPYARD)/sims
 FIRESIM = $(SIMS)/firesim
 FIRESIM_STAGING = $(SIMS)/firesim-staging
 PLATFORM = rhsresearch_nitefury_ii
@@ -36,7 +38,7 @@ help:
 	@echo "Targets:"
 	@echo "#      command    		description 						needs"
 	@echo "1.     setup:     		Clone all repositories and set them up. 		-"
-	@echo "2.     chipyard_pa		Patch chipyard with Borg. 				setup"
+	@echo "2.     chipyard_patch		Patch chipyard with Borg. 				setup"
 	@echo "3.     driver:    		Build the driver that's used to run the simulation. 	chipyard_patch"
 	@echo "4.     mcs:       		Build the bin file that's used to flash the FPGA.FPG 	chipyard_patch"
 	@echo "5.     program_dev		Flash the FPGA with the hex file. 			mcs"
@@ -54,18 +56,18 @@ SUBMODULES = generators/bar-fetchers generators/boom generators/caliptra-aes-acc
 	     generators/testchipip sims/firesim tools/cde generators/ara generators/compress-acc \
 	     generators/cva6 generators/gemmini generators/nvdla generators/rerocc generators/saturn
 SUBMODULES_RECURSIVE = tools/dsptools tools/fixedpoint tools/rocket-dsp-utils \
-		       tools/dsptools-chisel3 tools/fixedpoint-chisel3
+		       tools/dsptools-chisel3 tools/fixedpoint-chisel3 software/firemarshal
 CHIPYARD_VERSION = 1.12.3
 
 setup: chipyard_setup dma_ip_drivers_setup
 
-chipyard_setup: chipyard_clean
+chipyard_setup:
 	git clone git@github.com:ucb-bar/chipyard.git
-	cd chipyard; git checkout -b $(CHIPYARD_VERSION) $(CHIPYARD_VERSION)
-	cd chipyard; git submodule update --init $(SUBMODULES)
-	cd chipyard/sims/firesim && git submodule update --init \
+	cd $(CHIPYARD); git checkout -b $(CHIPYARD_VERSION) $(CHIPYARD_VERSION)
+	cd $(CHIPYARD); git submodule update -j 8 --init $(SUBMODULES)
+	cd $(CHIPYARD)/sims/firesim && git submodule update --init \
 		platforms/rhsresearch_nitefury_ii/NiteFury-and-LiteFury-firesim
-	cd chipyard; git submodule update --init --recursive $(SUBMODULES_RECURSIVE)
+	cd $(CHIPYARD); git submodule update -j 8 --init --recursive $(SUBMODULES_RECURSIVE)
 
 # Miscellaneous ####################################################################################
 
@@ -95,8 +97,8 @@ endif
 
 chipyard_patch: generate_env patch_borg patch_tracerv
 chipyard_reset:
-	cd chipyard; git clean -df; git checkout .
-	cd chipyard/sims/firesim && git checkout .
+	cd $(CHIPYARD); git clean -df; git checkout .
+	cd $(FIRESIM) && git checkout .
 
 driver: chipyard_patch $(DRIVER)
 $(SV) $(DRIVER):
@@ -108,13 +110,13 @@ $(SV) $(DRIVER):
 generate_env:
 	./generate_env.sh
 patch_borg:
-	patch -d chipyard -p1 < borg.patch
+	patch -d $(CHIPYARD) -p1 < borg.patch
 patch_borg_reverse:
-	patch -d chipyard -R -p1 < borg.patch
+	patch -d $(CHIPYARD) -R -p1 < borg.patch
 patch_tracerv:
-	patch -d chipyard/sims/firesim -p1 < tracerv.patch
+	patch -d $(FIRESIM) -p1 < tracerv.patch
 patch_tracerv_reverse:
-	patch -d chipyard/sims/firesim -R -p1 < tracerv.patch
+	patch -d $(FIRESIM) -R -p1 < tracerv.patch
 
 # Build MCS ########################################################################################
 
@@ -140,14 +142,38 @@ clean_logs:
 program_device:
 	vivado_lab -mode tcl -source program.tcl
 
+# Kernel ##########################################################################################
+
+FIREMARSHAL = $(CHIPYARD)/software/firemarshal
+IMAGES_FIRECHIP = $(FIREMARSHAL)/images/firechip
+BR_BASE = $(IMAGES_FIRECHIP)/br-base
+BASE_IMG = $(BR_BASE)/br-base.img
+BIN_DWARF = $(BR_BASE)/br-base-bin-dwarf
+BASE_BIN = $(BR_BASE)/br-base-bin
+BOARDS = $(FIREMARSHAL)/boards
+DRIVERS = $(BOARDS)/firechip/drivers
+
+distro: $(BASE_BIN) $(BASE_IMG)
+$(BASE_BIN) $(BASE_IMG):
+	cd $(FIREMARSHAL); ./marshal -v build br-base.json
+clean_distro_kernel:
+	rm -f $(BASE_BIN)
+clean_distro:
+	cd $(BOARDS)/default/linux; make mrproper
+	cd $(DRIVERS)/icenet-driver; make clean
+	cd $(DRIVERS)/iceblk-driver; make clean
+update_distro: clean_distro clean_distro_kernel distro
+# Compile manually:
+# make ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- vmlinux
+
+
 ####################################################################################################
 
-chipyard_clean:
-	rm -rf chipyard project project.cache
+clean: clean_logs
+	rm -rf $(CHIPYARD) project project.cache dma_ip_drivers
 	rm -f out.mcs $(MCS) out.prm project.srcs
 
-clean: chipyard_clean clean_logs
 
-.PHONY: add_borg all chipyard_clean chipyard_patch chipyard_reset clean clean_logs \
+.PHONY: add_borg all chipyard_patch chipyard_reset clean clean_logs \
 	dma_ip_drivers_setup edit_dts driver generate_env ls_driver mcs patch_borg \
 	patch_borg_reverse patch_tracerv patch_tracerv_reverse setup touch xdma
