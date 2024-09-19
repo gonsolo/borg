@@ -32,10 +32,11 @@ all: help
 
 help:
 	@echo "Targets:"
-	@echo "1.     setup:          Clone all repositories and set them up."
-	@echo "2.     driver:         Build the driver that's used to run the simulation."
-	@echo "3.     mcs:            Build the bin file that's used to flash the FPGA."
-	@echo "4.     program_device: Flash the FPGA with the hex file."
+	@echo "#      command         description 						needs"
+	@echo "1.     setup:          Clone all repositories and set them up. 			-"
+	@echo "2.     driver:         Build the driver that's used to run the simulation. 	setup"
+	@echo "3.     mcs:            Build the bin file that's used to flash the FPGA.FPG 	setup"
+	@echo "4.     program_device: Flash the FPGA with the hex file. 			mcs"
 	@echo "Other: clean:          Clean up everything."
 
 # Setup ###########################################################################################
