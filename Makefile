@@ -62,7 +62,12 @@ setup: clean
 
 # Build Driver #####################################################################################
 
-driver: generate_env patch_borg patch_tracerv $(DRIVER)
+chipyard_patch: generate_env patch_borg patch_tracerv
+chipyard_reset:
+	cd chipyard; git clean -df; git checkout .
+	cd chipyard/sims/firesim && git checkout .
+
+driver: chipyard_patch $(DRIVER)
 $(SV) $(DRIVER):
 	$(MAKE) -j $(shell nproc) -C $(FIRESIM)/sim RISCV=$(RISCV) \
 		FIRESIM_ENV_SOURCED=$(FIRESIM_ENV_SOURCED) PLATFORM=$(PLATFORM) \
@@ -110,5 +115,5 @@ clean: clean_logs
 	rm -rf chipyard project project.cache
 	rm -f out.mcs $(MCS) out.prm project.srcs
 
-.PHONY: add_borg all clean clean_logs driver generate_env mcs patch_borg patch_borg_reverse \
+.PHONY: add_borg all chipyard_patch chipyard_reset clean clean_logs driver generate_env mcs patch_borg patch_borg_reverse \
 	patch_tracerv patch_tracerv_reverse setup touch
