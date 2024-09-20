@@ -1,4 +1,4 @@
-FEQUENCY = 50
+FREQUENCY = 50
 STRATEGY = TIMING
 
 # Install the spike-git package and add ~/lib/libfesvr.a and ~/lib/libriscv.so as links to the
@@ -26,8 +26,8 @@ SV = $(FIRESIM)/sim/generated-src/$(PLATFORM)/$(QUINTUPLET)/$(DESIGN)-generated.
 # PCI-Express.
 DRIVER =$(FIRESIM)/sim/output/$(PLATFORM)/$(QUINTUPLET)/FireSim-rhsresearch_nitefury_ii
 
-# Vivado MCS file: This is the bitstream the FPGA is programmed with
-MCS = out.bin
+# This is the bitstream the FPGA is programmed with
+BITSTREAM = out.bin
 
 # The device tree
 DTS = $(FIRESIM_STAGING)/generated-src/firesim.firesim.FireSim.BorgConfig/firesim.firesim.FireSim.BorgConfig.dts
@@ -40,8 +40,8 @@ help:
 	@echo "1.     setup:     		Clone all repositories and set them up. 		-"
 	@echo "2.     chipyard_patch		Patch chipyard with Borg. 				setup"
 	@echo "3.     driver:    		Build the driver that's used to run the simulation. 	chipyard_patch"
-	@echo "4.     mcs:       		Build the bin file that's used to flash the FPGA.FPG 	chipyard_patch"
-	@echo "5.     program_dev		Flash the FPGA with the hex file. 			mcs"
+	@echo "4.     bitstream:       		Build the file that's used to flash the FPGA. 		chipyard_patch"
+	@echo "5.     program_device		Flash the FPGA with the hex file. 			mcs"
 	@echo "6.     dma_ip_drivers_install: 	Install XDMA drivers. 					setup"
 	@echo "7.     xdma: 			Load xmda drivers. 					dma_ip_drivers_install"
 	@echo "Other: clean:     		Clean up everything."
@@ -72,7 +72,7 @@ chipyard_setup:
 # Miscellaneous ####################################################################################
 
 ls_driver:
-	ls -lh $(DRIVER)
+	@ls -lh $(DRIVER)
 
 edit_dts:
 	vi $(DTS)
@@ -100,7 +100,7 @@ chipyard_reset:
 	cd $(CHIPYARD); git clean -df; git checkout .
 	cd $(FIRESIM) && git checkout .
 
-driver: chipyard_patch $(DRIVER)
+driver: $(DRIVER)
 $(SV) $(DRIVER):
 	$(MAKE) -j $(shell nproc) -C $(FIRESIM)/sim RISCV=$(RISCV) \
 		FIRESIM_ENV_SOURCED=$(FIRESIM_ENV_SOURCED) PLATFORM=$(PLATFORM) \
@@ -118,14 +118,14 @@ patch_tracerv:
 patch_tracerv_reverse:
 	patch -d $(FIRESIM) -R -p1 < tracerv.patch
 
-# Build MCS ########################################################################################
+# Build Bitstream  #################################################################################
 
 PROJECT_0 = $(FIRESIM)/platforms/$(PLATFORM)/NiteFury-and-LiteFury-firesim/Sample-Projects/Project-0
 HDL = project.srcs/sources_1/imports/HDL
 PROJECT_0_HDL = $(PROJECT_0)/cl_firesim/Nitefury-II/project/$(HDL)
 
-mcs: $(MCS)
-$(MCS): $(DRIVER)
+bitstream: $(BITSTREAM)
+$(BITSTREAM): $(DRIVER)
 	ln -sf $(PROJECT_0)/cl_$(QUINTUPLET)/Nitefury-II/project/project.srcs .
 	cp $(PROJECT_0)/cl_firesim/common/HDL/CodeBlinker.v $(HDL)
 	cp $(PROJECT_0_HDL)/firesim_wrapper.v $(HDL)
@@ -166,14 +166,12 @@ update_distro: clean_distro clean_distro_kernel distro
 # Compile manually:
 # make ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- vmlinux
 
-
 ####################################################################################################
 
 clean: clean_logs
 	rm -rf $(CHIPYARD) project project.cache dma_ip_drivers
-	rm -f out.mcs $(MCS) out.prm project.srcs
+	rm -f out.mcs $(BITSTREAM) out.prm project.srcs
 
-
-.PHONY: add_borg all chipyard_patch chipyard_reset clean clean_logs \
-	dma_ip_drivers_setup edit_dts driver generate_env ls_driver mcs patch_borg \
+.PHONY: add_borg all bitstream chipyard_patch chipyard_reset clean clean_logs \
+	dma_ip_drivers_setup edit_dts driver generate_env ls_driver patch_borg \
 	patch_borg_reverse patch_tracerv patch_tracerv_reverse setup touch xdma
