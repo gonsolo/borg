@@ -42,10 +42,11 @@ help:
 	@echo "2.     apply_patches: 		Patch chipyard with Borg. 				setup"
 	@echo "3.     driver:    		Build the driver that's used to run the simulation. 	apply_patches"
 	@echo "4.     bitstream: 		Build the file that's used to flash the FPGA. 		apply_patches"
-	@echo "5.     program_device		Flash the FPGA with the hex file. 			mcs"
+	@echo "5.     program_device		Flash the FPGA with the hex file. 			bitstream"
 	@echo "6.     dma_ip_drivers_install: 	Install XDMA drivers. 					-"
 	@echo "7.     xdma: 			Load xmda drivers. 					dma_ip_drivers_install"
 	@echo "8.     distro: 			Make Linux kernel and bootloader. 			setup"
+	@echo "9.     run: 			TODO: Run simulation. 					driver program_device xdma distro"
 	@echo "Other: clean:     		Clean up everything."
 
 # Setup ###########################################################################################
