@@ -1,25 +1,45 @@
+From 732995bcb4f60105e48dc2b23092642cddcfa76e Mon Sep 17 00:00:00 2001
+From: Gon Solo <gonsolo@gmail.com>
+Date: Thu, 10 Oct 2024 17:43:29 +0200
+Subject: [PATCH] Borg for 1.13.0.
+
+---
+ build.sbt                                     |   8 +-
+ generators/borg/src/main/scala/Borg.scala     | 209 ++++++++++++++++++
+ .../chipyard/src/main/scala/DigitalTop.scala  |   1 +
+ .../main/cc/bridges/tracerv/tracerv_dwarf.cc  |  86 +++----
+ .../main/cc/bridges/tracerv/tracerv_dwarf.h   |   4 +-
+ .../main/cc/bridges/tracerv/tracerv_elf.cc    |   4 +-
+ .../chip/src/main/scala/TargetConfigs.scala   |   4 +
+ 7 files changed, 268 insertions(+), 48 deletions(-)
+ create mode 100644 generators/borg/src/main/scala/Borg.scala
+
 diff --git a/build.sbt b/build.sbt
-index 0c18b5bb..a94f1ece 100644
+index f50564e6..5851600c 100644
 --- a/build.sbt
 +++ b/build.sbt
-@@ -176,7 +176,7 @@ lazy val chipyard = (project in file("generators/chipyard"))
+@@ -158,7 +158,7 @@ lazy val chipyard = (project in file("generators/chipyard"))
      dsptools, rocket_dsp_utils,
      gemmini, icenet, tracegen, cva6, nvdla, sodor, ibex, fft_generator,
      constellation, mempress, barf, shuttle, caliptra_aes, rerocc,
--    compressacc, saturn, ara)
-+    compressacc, saturn, ara, borg)
+-    compressacc, saturn, ara, firrtl2_bridge, vexiiriscv)
++    compressacc, saturn, ara, firrtl2_bridge, vexiiriscv, borg)
    .settings(libraryDependencies ++= rocketLibDeps.value)
    .settings(
      libraryDependencies ++= Seq(
-@@ -357,3 +357,8 @@ lazy val fpga_shells = (project in file("./fpga/fpga-shells"))
- lazy val chipyard_fpga = (project in file("./fpga"))
+@@ -322,6 +322,12 @@ lazy val chipyard_fpga = (project in file("./fpga"))
    .dependsOn(chipyard, fpga_shells)
    .settings(commonSettings)
+ 
 +
 +lazy val borg = (project in file("generators/borg"))
 +  .dependsOn(rocketchip)
 +  .settings(libraryDependencies ++= rocketLibDeps.value)
 +  .settings(commonSettings)
++
+ // Components of FireSim
+ 
+ lazy val firrtl2 = freshProject("firrtl2", file("./tools/firrtl2"))
 diff --git a/generators/borg/src/main/scala/Borg.scala b/generators/borg/src/main/scala/Borg.scala
 new file mode 100644
 index 00000000..ca6c21b2
@@ -235,18 +255,6 @@ index 00000000..ca6c21b2
 +class WithBorg() extends Config((site, here, up) => {
 +  case BorgKey => Some(BorgParams())
 +})
-diff --git a/generators/firechip/src/main/scala/TargetConfigs.scala b/generators/firechip/src/main/scala/TargetConfigs.scala
-index 832c9c89..b84ca679 100644
---- a/generators/firechip/src/main/scala/TargetConfigs.scala
-+++ b/generators/firechip/src/main/scala/TargetConfigs.scala
-@@ -386,3 +386,7 @@ class FireSimLargeBoomSV39CospikeConfig extends Config(
-   new WithFireSimConfigTweaks++
-   new freechips.rocketchip.rocket.WithSV39 ++
-   new chipyard.LargeBoomV3Config)
-+
-+class BorgConfig extends Config(
-+  new borg.WithBorg ++
-+  new FireSimRocket1GiBDRAMConfig)
 diff --git a/generators/chipyard/src/main/scala/DigitalTop.scala b/generators/chipyard/src/main/scala/DigitalTop.scala
 index c4fa17aa..a3697e7f 100644
 --- a/generators/chipyard/src/main/scala/DigitalTop.scala
@@ -259,4 +267,160 @@ index c4fa17aa..a3697e7f 100644
  {
    override lazy val module = new DigitalTopModule(this)
  }
+diff --git a/generators/firechip/bridgestubs/src/main/cc/bridges/tracerv/tracerv_dwarf.cc b/generators/firechip/bridgestubs/src/main/cc/bridges/tracerv/tracerv_dwarf.cc
+index 8665643f..b829f13c 100644
+--- a/generators/firechip/bridgestubs/src/main/cc/bridges/tracerv/tracerv_dwarf.cc
++++ b/generators/firechip/bridgestubs/src/main/cc/bridges/tracerv/tracerv_dwarf.cc
+@@ -41,46 +41,46 @@ private:
+   Dwarf_Debug dbg;
+ };
+ 
+-dwarf_t::dwarf_t(Elf *elf) {
+-  Dwarf_Error err;
+-  if (dwarf_elf_init(
+-          elf, DW_DLC_READ, &dwarf_runtime_error, nullptr, &this->dbg, &err) !=
+-      DW_DLV_OK) {
+-    this->dbg = nullptr;
+-  }
+-}
++//dwarf_t::dwarf_t(Elf *elf) {
++//  Dwarf_Error err;
++//  if (dwarf_elf_init(
++//          elf, DW_DLC_READ, &dwarf_runtime_error, nullptr, &this->dbg, &err) !=
++//      DW_DLV_OK) {
++//    this->dbg = nullptr;
++//  }
++//}
+ 
+ void dwarf_t::subroutines(subroutine_map &table) {
+   if (this->dbg == nullptr) {
+     return;
+   }
+   Dwarf_Unsigned next_cu_offset;
+-  while (dwarf_next_cu_header_c(this->dbg,
+-                                1,       // is_info
+-                                nullptr, // cu_header_length
+-                                nullptr, // version_stamp
+-                                nullptr, // abbrev_offset
+-                                nullptr, // address_size
+-                                nullptr, // offset_size
+-                                nullptr, // extension_size
+-                                nullptr, // signature
+-                                nullptr, // typeoffset
+-                                &next_cu_offset,
+-                                nullptr) == DW_DLV_OK) {
+-
+-    // Expect CU to have an initial DIE
+-    Dwarf_Die die;
+-    if (dwarf_siblingof(this->dbg, nullptr, &die, nullptr) != DW_DLV_OK) {
+-      continue;
+-    }
+-    die_ptr die_wrap(die, dwarf_deleter(dbg));
+-
+-    if (dwarf_child(die, &die, nullptr) == DW_DLV_OK) {
+-      die_wrap = die_ptr(die, dwarf_deleter(dbg));
+-      // Enumerate subprograms
+-      this->siblings(std::move(die_wrap), &dwarf_t::die_subprogram, table);
+-    }
+-  }
++//  while (dwarf_next_cu_header_c(this->dbg,
++//                                1,       // is_info
++//                                nullptr, // cu_header_length
++//                                nullptr, // version_stamp
++//                                nullptr, // abbrev_offset
++//                                nullptr, // address_size
++//                                nullptr, // offset_size
++//                                nullptr, // extension_size
++//                                nullptr, // signature
++//                                nullptr, // typeoffset
++//                                &next_cu_offset,
++//                                nullptr) == DW_DLV_OK) {
++//
++//    // Expect CU to have an initial DIE
++//    Dwarf_Die die;
++//    if (dwarf_siblingof(this->dbg, nullptr, &die, nullptr) != DW_DLV_OK) {
++//      continue;
++//    }
++//    die_ptr die_wrap(die, dwarf_deleter(dbg));
++//
++//    if (dwarf_child(die, &die, nullptr) == DW_DLV_OK) {
++//      die_wrap = die_ptr(die, dwarf_deleter(dbg));
++//      // Enumerate subprograms
++//      this->siblings(std::move(die_wrap), &dwarf_t::die_subprogram, table);
++//    }
++//  }
+ }
+ 
+ // Traverse siblings of a given DIE
+@@ -88,15 +88,15 @@ template <typename T>
+ void dwarf_t::siblings(die_ptr die,
+                        void (dwarf_t::*fn)(Dwarf_Die, T &),
+                        T &arg) {
+-  for (;;) {
+-    Dwarf_Die p = die.get();
+-
+-    (this->*fn)(p, arg);
+-    if (dwarf_siblingof(this->dbg, p, &p, nullptr) != DW_DLV_OK) {
+-      return;
+-    }
+-    die = die_ptr(p, dwarf_deleter(dbg));
+-  }
++//  for (;;) {
++//    Dwarf_Die p = die.get();
++//
++//    (this->*fn)(p, arg);
++//    if (dwarf_siblingof(this->dbg, p, &p, nullptr) != DW_DLV_OK) {
++//      return;
++//    }
++//    die = die_ptr(p, dwarf_deleter(dbg));
++//  }
+ }
+ 
+ void dwarf_t::die_callsite(Dwarf_Die die, std::vector<callsite_t> &table) {
+diff --git a/generators/firechip/bridgestubs/src/main/cc/bridges/tracerv/tracerv_dwarf.h b/generators/firechip/bridgestubs/src/main/cc/bridges/tracerv/tracerv_dwarf.h
+index 34ea4d87..b407d68c 100644
+--- a/generators/firechip/bridgestubs/src/main/cc/bridges/tracerv/tracerv_dwarf.h
++++ b/generators/firechip/bridgestubs/src/main/cc/bridges/tracerv/tracerv_dwarf.h
+@@ -34,10 +34,10 @@ const subroutine_t *subroutine_find(const subroutine_map &, uint64_t);
+ 
+ class dwarf_t {
+ public:
+-  dwarf_t(Elf *);
++  //dwarf_t(Elf *);
+   virtual ~dwarf_t(void) {
+     if (this->dbg) {
+-      dwarf_finish(this->dbg, nullptr);
++      //dwarf_finish(this->dbg, nullptr);
+     }
+   }
+ 
+diff --git a/generators/firechip/bridgestubs/src/main/cc/bridges/tracerv/tracerv_elf.cc b/generators/firechip/bridgestubs/src/main/cc/bridges/tracerv/tracerv_elf.cc
+index 1f03202e..8d48894b 100644
+--- a/generators/firechip/bridgestubs/src/main/cc/bridges/tracerv/tracerv_elf.cc
++++ b/generators/firechip/bridgestubs/src/main/cc/bridges/tracerv/tracerv_elf.cc
+@@ -75,8 +75,8 @@ void *elf_t::section_data(const char *name, size_t *size) {
+ 
+ std::pair<uint64_t, uint64_t> elf_t::subroutines(subroutine_map &table) {
+   {
+-    dwarf_t dwarf(this->elf);
+-    dwarf.subroutines(table);
++    //dwarf_t dwarf(this->elf);
++    //dwarf.subroutines(table);
+   }
+ 
+   size_t shnum;
+diff --git a/generators/firechip/chip/src/main/scala/TargetConfigs.scala b/generators/firechip/chip/src/main/scala/TargetConfigs.scala
+index f677b5ea..f0065013 100644
+--- a/generators/firechip/chip/src/main/scala/TargetConfigs.scala
++++ b/generators/firechip/chip/src/main/scala/TargetConfigs.scala
+@@ -361,3 +361,7 @@ class FireSimLargeBoomSV39CospikeConfig extends Config(
+   new WithFireSimConfigTweaks++
+   new freechips.rocketchip.rocket.WithSV39 ++
+   new chipyard.LargeBoomV3Config)
++
++class BorgConfig extends Config(
++  new borg.WithBorg ++
++  new FireSimRocket1GiBDRAMConfig)
+-- 
+2.47.0
 

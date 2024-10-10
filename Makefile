@@ -39,9 +39,9 @@ help:
 	@echo "Targets:"
 	@echo "#      command    		description 						needs"
 	@echo "1.     setup:     		Clone all repositories and set them up. 		-"
-	@echo "2.     chipyard_patch		Patch chipyard with Borg. 				setup"
-	@echo "3.     driver:    		Build the driver that's used to run the simulation. 	chipyard_patch"
-	@echo "4.     bitstream: 		Build the file that's used to flash the FPGA. 		chipyard_patch"
+	@echo "2.     apply_patches: 		Patch chipyard with Borg. 				setup"
+	@echo "3.     driver:    		Build the driver that's used to run the simulation. 	apply_patches"
+	@echo "4.     bitstream: 		Build the file that's used to flash the FPGA. 		apply_patches"
 	@echo "5.     program_device		Flash the FPGA with the hex file. 			mcs"
 	@echo "6.     dma_ip_drivers_install: 	Install XDMA drivers. 					-"
 	@echo "7.     xdma: 			Load xmda drivers. 					dma_ip_drivers_install"
@@ -57,11 +57,11 @@ SUBMODULES = generators/bar-fetchers generators/boom generators/caliptra-aes-acc
 	     generators/rocket-chip-inclusive-cache generators/shuttle generators/riscv-sodor \
 	     generators/testchipip sims/firesim tools/cde generators/ara generators/compress-acc \
 	     generators/cva6 generators/gemmini generators/nvdla generators/rerocc generators/saturn
-SUBMODULES_RECURSIVE = tools/dsptools tools/fixedpoint tools/rocket-dsp-utils \
-		       tools/dsptools-chisel3 tools/fixedpoint-chisel3 software/firemarshal
-CHIPYARD_VERSION = 1.12.3
+SUBMODULES_RECURSIVE = tools/dsptools tools/fixedpoint tools/rocket-dsp-utils software/firemarshal
+#CHIPYARD_VERSION = 1.12.3
+CHIPYARD_VERSION = 1.13.0
 
-setup: chipyard_setup firemarshal_patch dma_ip_drivers_setup
+setup: chipyard_setup apply_patches dma_ip_drivers_setup
 
 chipyard_setup:
 	git clone git@github.com:ucb-bar/chipyard.git
@@ -69,6 +69,8 @@ chipyard_setup:
 	cd $(CHIPYARD); git submodule update -j 8 --init $(SUBMODULES)
 	cd $(CHIPYARD)/sims/firesim && git submodule update --init \
 		platforms/rhsresearch_nitefury_ii/NiteFury-and-LiteFury-firesim
+	cd $(CHIPYARD); git submodule update -j 8 --init --recursive $(SUBMODULES_RECURSIVE)
+bla_setup:
 	cd $(CHIPYARD); git submodule update -j 8 --init --recursive $(SUBMODULES_RECURSIVE)
 
 # Miscellaneous ####################################################################################
@@ -97,11 +99,6 @@ endif
 
 # Build Driver #####################################################################################
 
-chipyard_patch: generate_env patch_borg patch_tracerv
-chipyard_reset:
-	cd $(CHIPYARD); git clean -df; git checkout .
-	cd $(FIRESIM) && git checkout .
-
 driver: $(DRIVER)
 $(SV) $(DRIVER):
 	$(MAKE) -j $(shell nproc) -C $(FIRESIM)/sim RISCV=$(RISCV) \
@@ -111,14 +108,6 @@ $(SV) $(DRIVER):
 
 generate_env:
 	./generate_env.sh
-patch_borg:
-	patch -d $(CHIPYARD) -p1 < borg.patch
-patch_borg_reverse:
-	patch -d $(CHIPYARD) -R -p1 < borg.patch
-patch_tracerv:
-	patch -d $(FIRESIM) -p1 < tracerv.patch
-patch_tracerv_reverse:
-	patch -d $(FIRESIM) -R -p1 < tracerv.patch
 
 # Build Bitstream  #################################################################################
 
@@ -167,10 +156,16 @@ DRIVERS = $(BOARDS)/firechip/drivers
 #		git checkout -b gonsolo gonsolo/gonsolo
 
 BUSYBOX = $(FIREMARSHAL)/wlutil/busybox
-firemarshal_patch: busybox_patch
-	patch -d $(FIREMARSHAL) -p1 < firemarshal.patch
-busybox_patch:
-	patch -d $(BUSYBOX) -p1 < busybox.patch
+
+apply_patches: generate_env
+	patch -d $(CHIPYARD)    -p1 < chipyard.patch
+	patch -d $(BUSYBOX) 	-p1 < busybox.patch
+	patch -d $(FIRESIM) 	-p1 < firesim.patch
+
+reset_patches:
+	cd $(CHIPYARD); git clean -df; git checkout .
+	cd $(FIRESIM) && git checkout .
+	cd $(BUSYBOX) && git checkout .
 
 distro: $(BASE_BIN) #$(BASE_IMG)
 $(BASE_BIN): # $(BASE_IMG):
@@ -191,7 +186,6 @@ clean: clean_logs
 	rm -rf $(CHIPYARD) project project.cache dma_ip_drivers
 	rm -f out.mcs $(BITSTREAM) out.prm project.srcs
 
-.PHONY: add_borg all bitstream buildroot_setup busybox_patch chipyard_patch chipyard_reset clean \
-	clean_logs distro_setup dma_ip_drivers_setup edit_dts driver firemarshal_patch \
-	generate_env ls_driver patch_borg patch_borg_reverse patch_tracerv patch_tracerv_reverse \
-	setup touch xdma
+.PHONY: add_borg all apply_patches bitstream buildroot_setup busybox_patch chipyard_patch clean \
+	clean_logs distro_setup dma_ip_drivers_setup edit_dts driver generate_env ls_driver \
+	reset_patches setup touch xdma
