@@ -62,7 +62,7 @@ SUBMODULES_RECURSIVE = tools/dsptools tools/fixedpoint tools/rocket-dsp-utils so
 #CHIPYARD_VERSION = 1.12.3
 CHIPYARD_VERSION = 1.13.0
 
-setup: chipyard_setup distro_setup apply_patches dma_ip_drivers_setup
+setup: chipyard_setup distro_setup dma_ip_drivers_setup
 
 chipyard_setup:
 	git clone git@github.com:ucb-bar/chipyard.git
