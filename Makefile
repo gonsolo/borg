@@ -1,4 +1,5 @@
 FREQUENCY = 50
+
 STRATEGY = TIMING
 
 # Install the spike-git package and add ~/lib/libfesvr.a and ~/lib/libriscv.so as links to the
@@ -40,10 +41,11 @@ help:
 	@echo "1.     setup:     		Clone all repositories and set them up. 		-"
 	@echo "2.     chipyard_patch		Patch chipyard with Borg. 				setup"
 	@echo "3.     driver:    		Build the driver that's used to run the simulation. 	chipyard_patch"
-	@echo "4.     bitstream:       		Build the file that's used to flash the FPGA. 		chipyard_patch"
+	@echo "4.     bitstream: 		Build the file that's used to flash the FPGA. 		chipyard_patch"
 	@echo "5.     program_device		Flash the FPGA with the hex file. 			mcs"
-	@echo "6.     dma_ip_drivers_install: 	Install XDMA drivers. 					setup"
+	@echo "6.     dma_ip_drivers_install: 	Install XDMA drivers. 					-"
 	@echo "7.     xdma: 			Load xmda drivers. 					dma_ip_drivers_install"
+	@echo "8.     distro: 			Make Linux kernel and bootloader. 			setup"
 	@echo "Other: clean:     		Clean up everything."
 
 # Setup ###########################################################################################
@@ -59,7 +61,7 @@ SUBMODULES_RECURSIVE = tools/dsptools tools/fixedpoint tools/rocket-dsp-utils \
 		       tools/dsptools-chisel3 tools/fixedpoint-chisel3 software/firemarshal
 CHIPYARD_VERSION = 1.12.3
 
-setup: chipyard_setup dma_ip_drivers_setup
+setup: chipyard_setup firemarshal_patch dma_ip_drivers_setup
 
 chipyard_setup:
 	git clone git@github.com:ucb-bar/chipyard.git
@@ -147,14 +149,31 @@ program_device:
 FIREMARSHAL = $(CHIPYARD)/software/firemarshal
 IMAGES_FIRECHIP = $(FIREMARSHAL)/images/firechip
 BR_BASE = $(IMAGES_FIRECHIP)/br-base
-BASE_IMG = $(BR_BASE)/br-base.img
+#BASE_IMG = $(BR_BASE)/br-base.img
 BIN_DWARF = $(BR_BASE)/br-base-bin-dwarf
 BASE_BIN = $(BR_BASE)/br-base-bin
 BOARDS = $(FIREMARSHAL)/boards
 DRIVERS = $(BOARDS)/firechip/drivers
 
-distro: $(BASE_BIN) $(BASE_IMG)
-$(BASE_BIN) $(BASE_IMG):
+#distro_setup:
+#	cd $(BOARDS)/default/linux; \
+#		git remote add gonsolo git@github.com:gonsolo/linux.git; \
+#		git fetch gonsolo; \
+#		git checkout -b firesim-v66-v6.10.9-borg gonsolo/firesim-v66-v6.10.9-borg
+#buildroot_setup:
+#	cd $(BOARDS)/default/distros/br/buildroot; \
+#		git remote add gonsolo git@github.com:gonsolo/buildroot.git; \
+#		git fetch gonsolo; \
+#		git checkout -b gonsolo gonsolo/gonsolo
+
+BUSYBOX = $(FIREMARSHAL)/wlutil/busybox
+firemarshal_patch: busybox_patch
+	patch -d $(FIREMARSHAL) -p1 < firemarshal.patch
+busybox_patch:
+	patch -d $(BUSYBOX) -p1 < busybox.patch
+
+distro: $(BASE_BIN) #$(BASE_IMG)
+$(BASE_BIN): # $(BASE_IMG):
 	cd $(FIREMARSHAL); ./marshal -v build br-base.json
 clean_distro_kernel:
 	rm -f $(BASE_BIN)
@@ -172,6 +191,7 @@ clean: clean_logs
 	rm -rf $(CHIPYARD) project project.cache dma_ip_drivers
 	rm -f out.mcs $(BITSTREAM) out.prm project.srcs
 
-.PHONY: add_borg all bitstream chipyard_patch chipyard_reset clean clean_logs \
-	dma_ip_drivers_setup edit_dts driver generate_env ls_driver patch_borg \
-	patch_borg_reverse patch_tracerv patch_tracerv_reverse setup touch xdma
+.PHONY: add_borg all bitstream buildroot_setup busybox_patch chipyard_patch chipyard_reset clean \
+	clean_logs distro_setup dma_ip_drivers_setup edit_dts driver firemarshal_patch \
+	generate_env ls_driver patch_borg patch_borg_reverse patch_tracerv patch_tracerv_reverse \
+	setup touch xdma

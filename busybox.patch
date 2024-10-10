@@ -1,0 +1,46 @@
+From 4c332b21f96d885d0600ba6e19b3cae50872e2bc Mon Sep 17 00:00:00 2001
+From: Gon Solo <gonsolo@gmail.com>
+Date: Thu, 10 Oct 2024 09:28:19 +0200
+Subject: [PATCH] Fix busybox build.
+
+---
+ networking/tc.c                            | 2 ++
+ scripts/kconfig/lxdialog/check-lxdialog.sh | 2 +-
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/networking/tc.c b/networking/tc.c
+index 43187f7ee..0c962e917 100644
+--- a/networking/tc.c
++++ b/networking/tc.c
+@@ -233,6 +233,7 @@ static int cbq_parse_opt(int argc, char **argv, struct nlmsghdr *n)
+ #endif
+ static int cbq_print_opt(struct rtattr *opt)
+ {
++#if 0
+ 	struct rtattr *tb[TCA_CBQ_MAX+1];
+ 	struct tc_ratespec *r = NULL;
+ 	struct tc_cbq_lssopt *lss = NULL;
+@@ -320,6 +321,7 @@ static int cbq_print_opt(struct rtattr *opt)
+ 		}
+ 	}
+  done:
++#endif
+ 	return 0;
+ }
+ 
+diff --git a/scripts/kconfig/lxdialog/check-lxdialog.sh b/scripts/kconfig/lxdialog/check-lxdialog.sh
+index 5075ebf2d..4e138366d 100755
+--- a/scripts/kconfig/lxdialog/check-lxdialog.sh
++++ b/scripts/kconfig/lxdialog/check-lxdialog.sh
+@@ -47,7 +47,7 @@ trap "rm -f $tmp" 0 1 2 3 15
+ check() {
+         $cc -x c - -o $tmp 2>/dev/null <<'EOF'
+ #include CURSES_LOC
+-main() {}
++int main() {}
+ EOF
+ 	if [ $? != 0 ]; then
+ 	    echo " *** Unable to find the ncurses libraries or the"       1>&2
+-- 
+2.47.0
+
