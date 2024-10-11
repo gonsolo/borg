@@ -48,7 +48,7 @@ help:
 	@echo " 7.     	xdma_load:		Load xmda drivers. 					xdma_install"
 	@echo " 8.     	distro: 		Make Linux kernel and bootloader. 			setup"
 	@echo " 9.     	connect_debian: 	Connect the Debian image via nbd. 			-"
-	@echo "10.     	run_simulation:		Run simulation. 					connect_debian driver program_device xdma_load distro"
+	@echo "10.     	run_simulation:		Run simulation. 					connect_debian driver program_device xdma_load distro debian.qcow2"
 	@echo "Other:"
 	@echo "11.     	disconnect_debian:     	Disconnect Debian. Necessary for qemu_debian"
 	@echo "12.     	qemu_debian:     	Run Debian image via qemu. Much faster than simulation"
@@ -233,7 +233,11 @@ NBDP = /dev/nbd0p1
 # A RISC-V debian.qcow2 image can be found here:
 # https://drive.google.com/file/d/1JUwW6Wid5cio9gy35v-RlWJ_pRP9BcPs/view?usp=sharing
 # It's built from https://people.debian.org/~gio/dqib and comes with Mesa and a simple Vulkan
-# application for testing.
+# application for testing:
+# https://github.com/gonsolo/mesa/tree/gonsolo
+# https://github.com/gonsolo/VulkanHpp-Compute-Sample/tree/gonsolo
+# Running the image to to /root/src/mesa/gonsolo and run "make test". This should run the test
+# application with the custom Mesa driver.
 
 # QCOW2 images can be run if connected via NBD.
 connect_debian:
