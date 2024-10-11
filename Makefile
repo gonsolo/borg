@@ -15,6 +15,7 @@ FIRESIM = $(SIMS)/firesim
 FIRESIM_STAGING = $(SIMS)/firesim-staging
 PLATFORM = rhsresearch_nitefury_ii
 TARGET_PROJECT = firesim
+TARGET_PROJECT_MAKEFRAG = ../../../generators/firechip/chip/src/main/makefrag/firesim
 DESIGN = FireSim
 TARGET_CONFIG = BorgConfig
 PLATFORM_CONFIG = BaseNitefuryConfig
@@ -51,28 +52,54 @@ help:
 
 # Setup ###########################################################################################
 
-SUBMODULES = generators/bar-fetchers generators/boom generators/caliptra-aes-acc \
-	     generators/constellation generators/diplomacy generators/fft-generator \
-	     generators/hardfloat  generators/ibex generators/icenet generators/mempress \
-	     generators/rocc-acc-utils generators/rocket-chip generators/rocket-chip-blocks \
-	     generators/rocket-chip-inclusive-cache generators/shuttle generators/riscv-sodor \
-	     generators/testchipip sims/firesim tools/cde generators/ara generators/compress-acc \
-	     generators/cva6 generators/gemmini generators/nvdla generators/rerocc generators/saturn
-SUBMODULES_RECURSIVE = tools/dsptools tools/fixedpoint tools/rocket-dsp-utils software/firemarshal
-#CHIPYARD_VERSION = 1.12.3
 CHIPYARD_VERSION = 1.13.0
+
+CHIPYARD_SUBMODULES = generators/ara \
+		      generators/bar-fetchers \
+		      generators/boom \
+		      generators/caliptra-aes-acc \
+		      generators/compress-acc \
+		      generators/constellation \
+		      generators/cva6 \
+		      generators/diplomacy \
+		      generators/fft-generator \
+		      generators/gemmini \
+		      generators/hardfloat \
+		      generators/ibex \
+		      generators/icenet \
+		      generators/mempress \
+		      generators/nvdla \
+		      generators/rerocc \
+		      generators/riscv-sodor \
+		      generators/rocc-acc-utils \
+		      generators/rocket-chip \
+		      generators/rocket-chip-blocks \
+		      generators/rocket-chip-inclusive-cache \
+		      generators/saturn \
+		      generators/shuttle \
+		      generators/testchipip \
+		      generators/vexiiriscv \
+		      sims/firesim \
+		      tools/cde \
+		      tools/firrtl2
+CHIPYARD_SUBMODULES_RECURSIVE = software/firemarshal \
+				tools/dsptools \
+				tools/fixedpoint \
+				tools/rocket-dsp-utils
+FIRESIM_SUBMODULES = sim/cde \
+		     sim/rocket-chip \
+		     sim/diplomacy \
+		     sim/berkeley-hardfloat \
+		     platforms/rhsresearch_nitefury_ii/NiteFury-and-LiteFury-firesim
 
 setup: chipyard_setup distro_setup dma_ip_drivers_setup
 
 chipyard_setup:
 	git clone git@github.com:ucb-bar/chipyard.git
 	cd $(CHIPYARD); git checkout -b $(CHIPYARD_VERSION) $(CHIPYARD_VERSION)
-	cd $(CHIPYARD); git submodule update -j 8 --init $(SUBMODULES)
-	cd $(CHIPYARD)/sims/firesim && git submodule update --init \
-		platforms/rhsresearch_nitefury_ii/NiteFury-and-LiteFury-firesim
-	cd $(CHIPYARD); git submodule update -j 8 --init --recursive $(SUBMODULES_RECURSIVE)
-bla_setup:
-	cd $(CHIPYARD); git submodule update -j 8 --init --recursive $(SUBMODULES_RECURSIVE)
+	cd $(CHIPYARD); git submodule update -j 8 --init $(CHIPYARD_SUBMODULES)
+	cd $(CHIPYARD); git submodule update -j 8 --init --recursive $(CHIPYARD_SUBMODULES_RECURSIVE)
+	cd $(FIRESIM) && git submodule update --init $(FIRESIM_SUBMODULES)
 
 # Miscellaneous ####################################################################################
 
@@ -102,10 +129,18 @@ endif
 
 driver: $(DRIVER)
 $(SV) $(DRIVER):
-	$(MAKE) -j $(shell nproc) -C $(FIRESIM)/sim RISCV=$(RISCV) \
-		FIRESIM_ENV_SOURCED=$(FIRESIM_ENV_SOURCED) PLATFORM=$(PLATFORM) \
-		TARGET_PROJECT=$(TARGET_PROJECT) DESIGN=$(DESIGN) TARGET_CONFIG=$(TARGET_CONFIG) \
-		PLATFORM_CONFIG=$(PLATFORM_CONFIG) replace-rtl
+	$(MAKE) \
+		-j $(shell nproc) \
+		-C $(FIRESIM)/sim \
+		RISCV=$(RISCV) \
+		FIRESIM_ENV_SOURCED=$(FIRESIM_ENV_SOURCED) \
+		PLATFORM=$(PLATFORM) \
+		TARGET_PROJECT=$(TARGET_PROJECT) \
+		TARGET_PROJECT_MAKEFRAG=$(TARGET_PROJECT_MAKEFRAG) \
+		DESIGN=$(DESIGN) \
+		TARGET_CONFIG=$(TARGET_CONFIG) \
+		PLATFORM_CONFIG=$(PLATFORM_CONFIG) \
+		replace-rtl
 
 generate_env:
 	./generate_env.sh
