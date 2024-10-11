@@ -171,6 +171,7 @@ $(BITSTREAM): $(DRIVER)
 
 # Flash FPGA #######################################################################################
 
+# You have to have a Nitefury II FPGA installed.
 program_device:
 	vivado_lab -mode tcl -source program.tcl
 
