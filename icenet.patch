@@ -1,0 +1,51 @@
+From 4d8c02d603f1426281474c72c302f4474e9e4bbf Mon Sep 17 00:00:00 2001
+From: Gon Solo <gonsolo@gmail.com>
+Date: Fri, 11 Oct 2024 16:25:28 +0200
+Subject: [PATCH] Fix icenet for Linux 6.10.
+
+---
+ Makefile | 4 +++-
+ icenet.c | 5 +++--
+ 2 files changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 3388ddc..b5a44df 100644
+--- a/Makefile
++++ b/Makefile
+@@ -5,7 +5,9 @@ obj-m += icenet.o
+ else
+ 
+ # The default assumes you cloned this as part of firesim-software (FireMarshal)
+-LINUXSRC=../../../../riscv-linux
++# LINUXSRC=../../../../riscv-linux
++# Borg uses this:
++LINUXSRC=../../../default/linux
+ 
+ KMAKE=make -C $(LINUXSRC) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- M=$(PWD)
+ 
+diff --git a/icenet.c b/icenet.c
+index efb17d4..212b3ea 100644
+--- a/icenet.c
++++ b/icenet.c
+@@ -19,6 +19,7 @@
+ 
+ #include <linux/netdevice.h>
+ #include <linux/etherdevice.h>
++#include <linux/platform_device.h>
+ 
+ /* Can't add new CONFIG parameters in an external module, so define them here */
+ #define CONFIG_ICENET_MTU 1500
+@@ -143,8 +144,8 @@ static inline void clear_intmask(struct icenet_device *nic, uint32_t mask)
+ static inline void post_send_frag(
+ 		struct icenet_device *nic, skb_frag_t *frag, int last)
+ {
+-	uintptr_t addr = page_to_phys(frag->bv_page) + frag->bv_offset;
+-	uint64_t len = frag->bv_len, partial = !last, packet;
++        uintptr_t addr = page_to_phys(skb_frag_page(frag)) + frag->offset;
++	uint64_t len = frag->len, partial = !last, packet;
+ 
+ 	packet = (partial << 63) | (len << 48) | (addr & 0xffffffffffffL);
+ 	iowrite64(packet, nic->iomem + ICENET_SEND_REQ);
+-- 
+2.47.0
+

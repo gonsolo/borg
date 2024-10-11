@@ -44,10 +44,10 @@ help:
 	@echo "3.     driver:    		Build the driver that's used to run the simulation. 	apply_patches"
 	@echo "4.     bitstream: 		Build the file that's used to flash the FPGA. 		apply_patches"
 	@echo "5.     program_device		Flash the FPGA with the hex file. 			bitstream"
-	@echo "6.     dma_ip_drivers_install: 	Install XDMA drivers. 					-"
-	@echo "7.     xdma: 			Load xmda drivers. 					dma_ip_drivers_install"
+	@echo "6.     xdma_install: 		Install XDMA drivers. 					-"
+	@echo "7.     xdma_load:		Load xmda drivers. 					xdma_install"
 	@echo "8.     distro: 			Make Linux kernel and bootloader. 			setup"
-	@echo "9.     run: 			TODO: Run simulation. 					driver program_device xdma distro"
+	@echo "9.     run: 			TODO: Run simulation. 					driver program_device xdma_load distro"
 	@echo "Other: clean:     		Clean up everything."
 
 # Setup ###########################################################################################
@@ -115,10 +115,10 @@ dma_ip_drivers_setup:
 	git clone git@github.com:gonsolo/dma_ip_drivers.git
 	cd dma_ip_drivers; git checkout gonsolo
 
-dma_ip_drivers_install:
+xdma_install:
 	cd dma_ip_drivers/xdma/xdma; sudo make -j20 clean install
 
-xdma:
+xdma_load:
 ifneq ($(shell lsmod|grep xdma)xxx, xxx)
 	sudo rmmod xdma
 endif
@@ -174,7 +174,6 @@ program_device:
 FIREMARSHAL = $(CHIPYARD)/software/firemarshal
 IMAGES_FIRECHIP = $(FIREMARSHAL)/images/firechip
 BR_BASE = $(IMAGES_FIRECHIP)/br-base
-#BASE_IMG = $(BR_BASE)/br-base.img
 BIN_DWARF = $(BR_BASE)/br-base-bin-dwarf
 BASE_BIN = $(BR_BASE)/br-base-bin
 BOARDS = $(FIREMARSHAL)/boards
@@ -193,13 +192,16 @@ apply_patches: generate_env
 	patch -d $(BUSYBOX) 	-p1 < busybox.patch
 	patch -d $(FIRESIM) 	-p1 < firesim.patch
 
+apply_icenet_patch:
+	patch -d $(DRIVERS)/icenet-driver -p1 < icenet.patch
+
 reset_patches:
 	cd $(CHIPYARD); git clean -df; git checkout .
 	cd $(FIRESIM) && git checkout .
 	cd $(BUSYBOX) && git checkout .
 
-distro: $(BASE_BIN) #$(BASE_IMG)
-$(BASE_BIN): # $(BASE_IMG):
+distro: $(BASE_BIN)
+$(BASE_BIN):
 	cd $(FIREMARSHAL); ./marshal -v build br-base.json
 clean_distro_kernel:
 	rm -f $(BASE_BIN)
@@ -208,6 +210,8 @@ clean_distro:
 	cd $(DRIVERS)/icenet-driver; make clean
 	cd $(DRIVERS)/iceblk-driver; make clean
 update_distro: clean_distro clean_distro_kernel distro
+ls_distro:
+	ls -lh $(BASE_BIN)
 # Compile manually:
 # make ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- vmlinux
 
@@ -218,5 +222,5 @@ clean: clean_logs
 	rm -f out.mcs $(BITSTREAM) out.prm project.srcs
 
 .PHONY: add_borg all apply_patches bitstream buildroot_setup busybox_patch chipyard_patch clean \
-	clean_logs distro_setup dma_ip_drivers_setup edit_dts driver generate_env ls_driver \
-	reset_patches setup touch xdma
+	clean_logs distro_setup dma_ip_drivers_setup edit_dts driver generate_env ls_distro \
+	ls_driver reset_patches setup touch xdma
