@@ -188,12 +188,11 @@ distro_setup:
 BUSYBOX = $(FIREMARSHAL)/wlutil/busybox
 
 apply_patches: generate_env
-	patch -d $(CHIPYARD)    -p1 < chipyard.patch
-	patch -d $(BUSYBOX) 	-p1 < busybox.patch
-	patch -d $(FIRESIM) 	-p1 < firesim.patch
-
-apply_icenet_patch:
-	patch -d $(DRIVERS)/icenet-driver -p1 < icenet.patch
+	patch -d $(CHIPYARD)    		-p1 < chipyard.patch
+	patch -d $(BUSYBOX) 			-p1 < busybox.patch
+	patch -d $(FIRESIM) 			-p1 < firesim.patch
+	patch -d $(DRIVERS)/icenet-driver 	-p1 < icenet.patch
+	patch -d $(DRIVERS)/iceblk-driver 	-p1 < iceblk.patch
 
 reset_patches:
 	cd $(CHIPYARD); git clean -df; git checkout .

@@ -1,0 +1,64 @@
+From 4b43c077dab5b6c74d665397c939e82cb373ab28 Mon Sep 17 00:00:00 2001
+From: Gon Solo <gonsolo@gmail.com>
+Date: Fri, 11 Oct 2024 16:36:02 +0200
+Subject: [PATCH] Fix iceblk for 6.10.
+
+---
+ Makefile |  4 +++-
+ iceblk.c | 11 ++++++++---
+ 2 files changed, 11 insertions(+), 4 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 340c359..2f08cf4 100644
+--- a/Makefile
++++ b/Makefile
+@@ -5,7 +5,9 @@ obj-m += iceblk.o
+ else
+ 
+ # The default assumes you cloned this as part of firesim-software (FireMarshal)
+-LINUXSRC=../../../../riscv-linux
++# LINUXSRC=../../../../riscv-linux
++# Borg uses this:
++LINUXSRC=../../../default/linux
+ 
+ KMAKE=make -C $(LINUXSRC) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- M=$(PWD)
+ 
+diff --git a/iceblk.c b/iceblk.c
+index dcea96f..9591391 100644
+--- a/iceblk.c
++++ b/iceblk.c
+@@ -22,6 +22,8 @@
+ #include <linux/of_platform.h>
+ #include <linux/of_irq.h>
+ 
++#include <linux/platform_device.h>
++
+ #include <asm/io.h>
+ #include <asm/page.h>
+ 
+@@ -244,7 +246,12 @@ static int iceblk_setup(struct iceblk_port *port)
+ 		goto exit_queue;
+ 	}
+ 
+-	port->gd = blk_mq_alloc_disk(&port->tag_set, NULL);
++        struct queue_limits lim = {
++               .max_hw_sectors         = max_req_len,
++               .max_segments           = 1,
++        };
++
++	port->gd = blk_mq_alloc_disk(&port->tag_set, &lim, NULL);
+ 	if(IS_ERR(port->gd)) {
+ 		dev_err(dev, "Could not allocate disk\n");
+ 		goto exit_gendisk;
+@@ -252,8 +259,6 @@ static int iceblk_setup(struct iceblk_port *port)
+ 	port->queue = port->gd->queue;
+ 
+ 	blk_queue_logical_block_size(port->queue, ICEBLK_SECTOR_SIZE);
+-	blk_queue_max_segments(port->queue, 1);
+-	blk_queue_max_hw_sectors(port->queue, max_req_len);
+ 
+ 	port->gd->major = port->major;
+ 	port->gd->first_minor = 0;
+-- 
+2.47.0
+
