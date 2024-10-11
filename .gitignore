@@ -9,3 +9,8 @@ out.bin
 *.jou
 *.log
 dma_ip_drivers
+blkdev-log0
+debian.qcow2
+heartbeat.csv
+latency_histogram.csv
+memory_stats0.csv
