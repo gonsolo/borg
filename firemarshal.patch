@@ -1,0 +1,53 @@
+From 2e46d9de974748795c0e453d6df12435139cb238 Mon Sep 17 00:00:00 2001
+From: Gon Solo <gonsolo@gmail.com>
+Date: Mon, 14 Oct 2024 18:28:24 +0200
+Subject: [PATCH] Fix kernel build and build Borg.
+
+---
+ boards/firechip/base-workloads/br-base/linux-config | 7 ++++++-
+ wlutil/build.py                                     | 8 ++++++++
+ 2 files changed, 14 insertions(+), 1 deletion(-)
+
+diff --git a/boards/firechip/base-workloads/br-base/linux-config b/boards/firechip/base-workloads/br-base/linux-config
+index 4c4857f..b00a7f2 100644
+--- a/boards/firechip/base-workloads/br-base/linux-config
++++ b/boards/firechip/base-workloads/br-base/linux-config
+@@ -1,10 +1,15 @@
+-CONFIG_AS_VERSION=23900
++# gonsolo CONFIG_AS_VERSION=23900
+ # CONFIG_ATA is not set
+ # CONFIG_BACKLIGHT_CLASS_DEVICE is not set
+ CONFIG_CMDLINE="console=ttyS0 console=ttySIF0,3686400 earlycon"
+ CONFIG_DEBUG_SECTION_MISMATCH=y
+ CONFIG_DEFAULT_HOSTNAME="ucb"
++
++# gonsolo
+ # CONFIG_DRM is not set
++CONFIG_DRM=y
++CONFIG_DRM_BORG=y
++
+ CONFIG_EXT2_FS=y
+ # CONFIG_FB is not set
+ # CONFIG_HID_GENERIC is not set
+diff --git a/wlutil/build.py b/wlutil/build.py
+index 2e90da9..5b43d70 100644
+--- a/wlutil/build.py
++++ b/wlutil/build.py
+@@ -453,6 +453,14 @@ def makeModules(cfg):
+                    ["modules_prepare", '-j' + str(wlutil.getOpt('jlevel'))],
+                    cwd=linCfg['source'])
+ 
++        # gonsolo: modules_prepare does not provide Module.symvers so run kernel build
++        wlutil.run(["make"] + wlutil.getOpt('linux-make-args') +
++                   ["vmlinux", '-j' + str(wlutil.getOpt('jlevel'))],
++                   cwd=linCfg['source'])
++        wlutil.run(["make"] + wlutil.getOpt('linux-make-args') +
++                   ["modules", '-j' + str(wlutil.getOpt('jlevel'))],
++                   cwd=linCfg['source'])
++
+         # MODPOST errors are warnings, since we built the extmods without building the kernel first
+         makeCmd = "make KBUILD_MODPOST_WARN=1 LINUXSRC=" + str(linCfg['source'])
+ 
+-- 
+2.47.0
+

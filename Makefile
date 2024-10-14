@@ -204,6 +204,7 @@ apply_patches: generate_env
 	patch -d $(FIRESIM) 			-p1 < firesim.patch
 	patch -d $(DRIVERS)/icenet-driver 	-p1 < icenet.patch
 	patch -d $(DRIVERS)/iceblk-driver 	-p1 < iceblk.patch
+	patch -d $(FIREMARSHAL) 		-p1 < firemarshal.patch
 
 reset_patches:
 	cd $(CHIPYARD); git clean -df; git checkout .
