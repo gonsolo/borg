@@ -1,12 +1,12 @@
-From 4d8c02d603f1426281474c72c302f4474e9e4bbf Mon Sep 17 00:00:00 2001
+From 1307d5c3d2159e5d8cccab29e72672512f0812dd Mon Sep 17 00:00:00 2001
 From: Gon Solo <gonsolo@gmail.com>
-Date: Fri, 11 Oct 2024 16:25:28 +0200
-Subject: [PATCH] Fix icenet for Linux 6.10.
+Date: Mon, 14 Oct 2024 15:29:23 +0200
+Subject: [PATCH] Fix icenet for Linux 6.11.3.
 
 ---
  Makefile | 4 +++-
- icenet.c | 5 +++--
- 2 files changed, 6 insertions(+), 3 deletions(-)
+ icenet.c | 8 ++++----
+ 2 files changed, 7 insertions(+), 5 deletions(-)
 
 diff --git a/Makefile b/Makefile
 index 3388ddc..b5a44df 100644
@@ -24,7 +24,7 @@ index 3388ddc..b5a44df 100644
  KMAKE=make -C $(LINUXSRC) ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- M=$(PWD)
  
 diff --git a/icenet.c b/icenet.c
-index efb17d4..212b3ea 100644
+index efb17d4..9c9262d 100644
 --- a/icenet.c
 +++ b/icenet.c
 @@ -19,6 +19,7 @@
@@ -41,11 +41,28 @@ index efb17d4..212b3ea 100644
  {
 -	uintptr_t addr = page_to_phys(frag->bv_page) + frag->bv_offset;
 -	uint64_t len = frag->bv_len, partial = !last, packet;
-+        uintptr_t addr = page_to_phys(skb_frag_page(frag)) + frag->offset;
++	uintptr_t addr = page_to_phys(skb_frag_page(frag)) + frag->offset;
 +	uint64_t len = frag->len, partial = !last, packet;
  
  	packet = (partial << 63) | (len << 48) | (addr & 0xffffffffffffL);
  	iowrite64(packet, nic->iomem + ICENET_SEND_REQ);
+@@ -563,7 +564,7 @@ static int icenet_probe(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static int icenet_remove(struct platform_device *pdev)
++static void icenet_remove(struct platform_device *pdev)
+ {
+ 	struct net_device *ndev;
+ 	struct icenet_device *nic;
+@@ -572,7 +573,6 @@ static int icenet_remove(struct platform_device *pdev)
+ 	nic = netdev_priv(ndev);
+ 	netif_napi_del(&nic->napi);
+ 	unregister_netdev(ndev);
+-	return 0;
+ }
+ 
+ static struct of_device_id icenet_of_match[] = {
 -- 
 2.47.0
 
