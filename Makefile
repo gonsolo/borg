@@ -53,6 +53,7 @@ help:
 	@echo "11.     	disconnect_debian:     	Disconnect Debian. Necessary for qemu_debian"
 	@echo "12.     	qemu_debian:     	Run Debian image via qemu. Much faster than simulation"
 	@echo "13.     	clean:     		Clean up everything."
+	@echo "14.     	xz:     		Compress Debian image for backup."
 
 # Setup ###########################################################################################
 
@@ -286,5 +287,5 @@ clean: clean_logs
 
 .PHONY: add_borg all apply_patches bitstream buildroot_setup busybox_patch chipyard_patch clean \
 	clean_logs connect_debian disconnect_debian distro_setup dma_ip_drivers_setup edit_dts \
-	driver generate_env ls_distro ls_driver qemu_debian reset_patches run_simulation setup \
-	xdma xz
+	driver generate_env help ls_distro ls_driver qemu_debian reset_patches run_simulation \
+	setup xdma xz
