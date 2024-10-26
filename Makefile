@@ -53,7 +53,9 @@ help:
 	@echo "11.     	disconnect_debian:     	Disconnect Debian. Necessary for qemu_debian"
 	@echo "12.     	qemu_debian:     	Run Debian image via qemu. Much faster than simulation"
 	@echo "13.     	clean:     		Clean up everything."
-	@echo "14.     	xz:     		Compress Debian image for backup."
+	@echo "14.     	clean_distro:     	Clean up distro."
+	@echo "15.     	clean_distro_kernel:    Clean up distro kernel."
+	@echo "16.     	xz:     		Compress Debian image for backup."
 
 # Setup ###########################################################################################
 
@@ -187,12 +189,14 @@ BASE_BIN = $(BR_BASE)/br-base-bin
 BOARDS = $(FIREMARSHAL)/boards
 DRIVERS = $(BOARDS)/firechip/drivers
 
+KERNEL_VERSION = firesim-v66-v6.11.5-borg
+
 # Use our custom Linux kernel with Borg drivers.
 distro_setup:
 	cd $(BOARDS)/default/linux; \
 		git remote add gonsolo git@github.com:gonsolo/linux.git; \
 		git fetch gonsolo; \
-		git checkout -b firesim-v66-v6.10.9-borg gonsolo/firesim-v66-v6.10.9-borg
+		git checkout -b $(KERNEL_VERSION) gonsolo/$(KERNEL_VERSION)
 
 BUSYBOX = $(FIREMARSHAL)/wlutil/busybox
 
