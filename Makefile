@@ -53,9 +53,10 @@ help:
 	@echo "11.     	disconnect_debian:     	Disconnect Debian. Necessary for qemu_debian"
 	@echo "12.     	qemu_debian:     	Run Debian image via qemu. Much faster than simulation"
 	@echo "13.     	clean:     		Clean up everything."
-	@echo "14.     	clean_distro:     	Clean up distro."
-	@echo "15.     	clean_distro_kernel:    Clean up distro kernel."
-	@echo "16.     	xz:     		Compress Debian image for backup."
+	@echo "14.     	clean_driver:     	Clean up driver."
+	@echo "15.     	clean_distro:     	Clean up distro."
+	@echo "16.     	clean_distro_kernel:    Clean up distro kernel."
+	@echo "17.     	xz:     		Compress Debian image for backup."
 
 # Setup ###########################################################################################
 
@@ -155,6 +156,9 @@ $(SV) $(DRIVER):
 
 generate_env:
 	./generate_env.sh
+
+clean_driver:
+	rm -f $(SV) $(DRIVER)
 
 # Build Bitstream  #################################################################################
 
@@ -291,6 +295,6 @@ clean: clean_logs
 	rm -f out.mcs $(BITSTREAM) out.prm project.srcs
 
 .PHONY: add_borg all apply_patches bitstream buildroot_setup busybox_patch chipyard_patch clean \
-	clean_logs connect_debian disconnect_debian distro_setup dma_ip_drivers_setup edit_dts \
-	driver generate_env help ls_distro ls_driver qemu_debian reset_patches run_simulation \
-	setup xdma xz
+	clean_driver clean_logs connect_debian disconnect_debian distro_setup dma_ip_drivers_setup \
+	edit_dts driver generate_env help ls_distro ls_driver qemu_debian reset_patches \
+	run_simulation setup xdma xz

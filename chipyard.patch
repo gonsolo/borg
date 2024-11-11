@@ -1,17 +1,17 @@
-From 732995bcb4f60105e48dc2b23092642cddcfa76e Mon Sep 17 00:00:00 2001
+From a89e303a20c7a0264df98b1fccee80f766d50002 Mon Sep 17 00:00:00 2001
 From: Gon Solo <gonsolo@gmail.com>
-Date: Thu, 10 Oct 2024 17:43:29 +0200
+Date: Mon, 11 Nov 2024 17:53:50 +0100
 Subject: [PATCH] Borg for 1.13.0.
 
 ---
  build.sbt                                     |   8 +-
- generators/borg/src/main/scala/Borg.scala     | 209 ++++++++++++++++++
+ generators/borg/src/main/scala/Borg.scala     | 211 ++++++++++++++++++
  .../chipyard/src/main/scala/DigitalTop.scala  |   1 +
  .../main/cc/bridges/tracerv/tracerv_dwarf.cc  |  86 +++----
  .../main/cc/bridges/tracerv/tracerv_dwarf.h   |   4 +-
  .../main/cc/bridges/tracerv/tracerv_elf.cc    |   4 +-
  .../chip/src/main/scala/TargetConfigs.scala   |   4 +
- 7 files changed, 268 insertions(+), 48 deletions(-)
+ 7 files changed, 270 insertions(+), 48 deletions(-)
  create mode 100644 generators/borg/src/main/scala/Borg.scala
 
 diff --git a/build.sbt b/build.sbt
@@ -42,10 +42,10 @@ index f50564e6..5851600c 100644
  lazy val firrtl2 = freshProject("firrtl2", file("./tools/firrtl2"))
 diff --git a/generators/borg/src/main/scala/Borg.scala b/generators/borg/src/main/scala/Borg.scala
 new file mode 100644
-index 00000000..ca6c21b2
+index 00000000..acd0b26b
 --- /dev/null
 +++ b/generators/borg/src/main/scala/Borg.scala
-@@ -0,0 +1,209 @@
+@@ -0,0 +1,211 @@
 +package borg
 +
 +import chisel3._
@@ -53,11 +53,13 @@ index 00000000..ca6c21b2
 +import chisel3.experimental.{IntParam, BaseModule}
 +import freechips.rocketchip.prci._
 +import freechips.rocketchip.subsystem.{BaseSubsystem, CacheBlockBytes, FBUS, PBUS}
-+import org.chipsalliance.cde.config.{Parameters, Field, Config}
-+import freechips.rocketchip.diplomacy._
++import freechips.rocketchip.diplomacy.{AddressSet, IdRange}
++import freechips.rocketchip.resources.SimpleDevice
 +import freechips.rocketchip.regmapper.{HasRegMap, RegField}
 +import freechips.rocketchip.tilelink._
 +import freechips.rocketchip.util.UIntIsOneOf
++import org.chipsalliance.cde.config.{Parameters, Field, Config}
++import org.chipsalliance.diplomacy.lazymodule.{InModuleBody, LazyModule}
 +
 +case class BorgParams(
 +  address: BigInt = 0x4000,
