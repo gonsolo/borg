@@ -111,8 +111,7 @@ chipyard_setup:
 	cd $(CHIPYARD); git submodule update -j 8 --init $(CHIPYARD_SUBMODULES)
 	cd $(CHIPYARD); git submodule update -j 8 --init --recursive $(CHIPYARD_SUBMODULES_RECURSIVE)
 	cd $(FIRESIM) && git submodule update --init $(FIRESIM_SUBMODULES)
-	mkdir -p $(BORG_DIR)
-	cp Borg.scala $(BORG_DIR)
+	cd $(CHIPYARD); git submodule add https://github.com/gonsolo/borg_generator.git generators/borg
 
 # Miscellaneous ####################################################################################
 
