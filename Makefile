@@ -121,6 +121,10 @@ ls_driver:
 edit_dts:
 	vi $(DTS)
 
+e: edit
+edit:
+	cd $(CHIPYARD); vi ./generators/borg/src/main/scala/Borg.scala
+
 # XDMA ############################################################################################
 
 # The xdma drivers are necessary to talk to the FPGA
@@ -297,7 +301,7 @@ clean: clean_logs
 	rm -rf $(CHIPYARD) project project.cache dma_ip_drivers
 	rm -f out.mcs $(BITSTREAM) out.prm project.srcs
 
-.PHONY: add_borg all apply_patches bitstream buildroot_setup busybox_patch chipyard_patch clean \
+.PHONY: all apply_patches bitstream clean \
 	clean_driver clean_logs connect_debian disconnect_debian distro_setup dma_ip_drivers_setup \
 	edit_dts driver generate_env help ls_distro ls_driver qemu_debian reset_patches \
 	run_simulation setup xdma xz
