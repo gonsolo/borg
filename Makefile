@@ -102,6 +102,8 @@ FIRESIM_SUBMODULES = sim/cde \
 
 setup: chipyard_setup distro_setup dma_ip_drivers_setup
 
+BORG_DIR = ./chipyard/generators/borg/src/main/scala
+
 # Clone Chipyard and all submodules
 chipyard_setup:
 	git clone git@github.com:ucb-bar/chipyard.git
@@ -109,6 +111,8 @@ chipyard_setup:
 	cd $(CHIPYARD); git submodule update -j 8 --init $(CHIPYARD_SUBMODULES)
 	cd $(CHIPYARD); git submodule update -j 8 --init --recursive $(CHIPYARD_SUBMODULES_RECURSIVE)
 	cd $(FIRESIM) && git submodule update --init $(FIRESIM_SUBMODULES)
+	mkdir -p $(BORG_DIR)
+	cd $(BORG_DIR); ln -s ../../../../../../Borg.scala .
 
 # Miscellaneous ####################################################################################
 
