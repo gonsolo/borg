@@ -3,19 +3,18 @@ package borg
 import chisel3._
 import chisel3.util._
 import chisel3.experimental.{IntParam, BaseModule}
-import freechips.rocketchip.prci._
-import freechips.rocketchip.subsystem.{BaseSubsystem, CacheBlockBytes, FBUS, PBUS}
+
 import freechips.rocketchip.diplomacy.{AddressSet, IdRange}
-import freechips.rocketchip.resources.SimpleDevice
-import freechips.rocketchip.regmapper.{HasRegMap, RegField}
-import freechips.rocketchip.tilelink._
-
 import freechips.rocketchip.interrupts.IntIdentityNode
-import freechips.rocketchip.rocket.{BTBParams, DCacheParams, ICacheParams, Rocket, RocketCoreParams}
-import freechips.rocketchip.subsystem.HierarchicalElementCrossingParamsLike
-import freechips.rocketchip.tile.{BaseTile, BaseTileModuleImp, CoreModule, InstantiableTileParams, LookupByHartIdImpl, SinksExternalInterrupts, SourcesExternalNotifications}
-
+import freechips.rocketchip.prci._
+import freechips.rocketchip.resources._
+import freechips.rocketchip.regmapper.{HasRegMap, RegField}
+import freechips.rocketchip.rocket._
+import freechips.rocketchip.subsystem._
+import freechips.rocketchip.tile._
+import freechips.rocketchip.tilelink._
 import freechips.rocketchip.util.UIntIsOneOf
+
 import org.chipsalliance.cde.config.{Parameters, Field, Config}
 import org.chipsalliance.diplomacy.lazymodule.{InModuleBody, LazyModule}
 
@@ -187,60 +186,16 @@ class BorgTL(params: BorgParams, beatBytes: Int)(implicit p: Parameters) extends
   }
 }
 
-case class BorgTileBoundaryBufferParams(force: Boolean = false)
+class BorgTile(
+  params: RocketTileParams,
+  crossing: HierarchicalElementCrossingParamsLike,
+  lookup: LookupByHartIdImpl,
+  q: Parameters)
+  extends RocketTile(params, crossing, lookup)(q) {
 
-case class BorgTileParams(
-    core: RocketCoreParams = RocketCoreParams(),
-    icache: Option[ICacheParams] = Some(ICacheParams()),
-    dcache: Option[DCacheParams] = Some(DCacheParams()),
-    btb: Option[BTBParams] = Some(BTBParams()),
-    dataScratchpadBytes: Int = 0,
-    tileId: Int = 0,
-    beuAddr: Option[BigInt] = None,
-    blockerCtrlAddr: Option[BigInt] = None,
-    clockSinkParams: ClockSinkParameters = ClockSinkParameters(),
-    boundaryBuffers: Option[BorgTileBoundaryBufferParams] = None
-  ) extends InstantiableTileParams[BorgTile] {
-  require(icache.isDefined)
-  require(dcache.isDefined)
-  val baseName = "rockettile"
-  val uniqueName = s"${baseName}_$tileId"
-  def instantiate(crossing: HierarchicalElementCrossingParamsLike, lookup: LookupByHartIdImpl)(implicit p: Parameters): BorgTile = {
-    new BorgTile(this, crossing, lookup)
-  }
-}
-
-class BorgRocket(tile: BorgTile)(implicit p: Parameters) extends CoreModule()(p) {
-  // TODO
-}
-
-class BorgTile private(
-      val borgParams: BorgTileParams,
-      crossing: ClockCrossingType,
-      lookup: LookupByHartIdImpl,
-      q: Parameters)
-    extends BaseTile(borgParams, crossing, lookup, q) 
-    with SinksExternalInterrupts
-    with SourcesExternalNotifications
-{
-  // Private constructor ensures altered LazyModule.p is used implicitly
-  def this(params: BorgTileParams, crossing: HierarchicalElementCrossingParamsLike, lookup: LookupByHartIdImpl)(implicit p: Parameters) =
-    this(params, crossing.crossingType, lookup, p)
-
-  val intOutwardNode = borgParams.beuAddr map { _ => IntIdentityNode() }
-  val slaveNode = TLIdentityNode()
-  val masterNode = visibilityNode
-
-  val cpuDevice: SimpleDevice = new SimpleDevice("borgcpu", Seq("sifive,rocket0", "riscv")) {
-    // TODO
-  }
-
-  override lazy val module = new BorgTileModuleImp(this)
-}
-
-class BorgTileModuleImp(outer: BorgTile) extends BaseTileModuleImp(outer) {
-
-  val core = Module(new BorgRocket(outer)(outer.p))
+    override val cpuDevice: SimpleDevice = new SimpleDevice("cpu", Seq("sifive,rocket0", "riscv")) {
+      override def parent = Some(ResourceAnchors.soc)
+    }
 }
 
 trait CanHavePeripheryBorg { this: BaseSubsystem =>
