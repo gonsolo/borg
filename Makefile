@@ -112,7 +112,7 @@ chipyard_setup:
 	cd $(CHIPYARD); git submodule update -j 8 --init --recursive $(CHIPYARD_SUBMODULES_RECURSIVE)
 	cd $(FIRESIM) && git submodule update --init $(FIRESIM_SUBMODULES)
 	mkdir -p $(BORG_DIR)
-	cd $(BORG_DIR); ln -s ../../../../../../Borg.scala .
+	cp Borg.scala $(BORG_DIR)
 
 # Miscellaneous ####################################################################################
 
