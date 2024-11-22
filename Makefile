@@ -300,6 +300,7 @@ clean_logs:
 clean: clean_logs
 	rm -rf $(CHIPYARD) project project.cache dma_ip_drivers
 	rm -f out.mcs $(BITSTREAM) out.prm project.srcs
+	rm -rf xsim.dir .Xil
 
 .PHONY: all apply_patches bitstream clean \
 	clean_driver clean_logs connect_debian disconnect_debian distro_setup dma_ip_drivers_setup \
