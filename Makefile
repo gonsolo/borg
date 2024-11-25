@@ -12,6 +12,7 @@ FIRESIM_ENV_SOURCED = 1
 CHIPYARD = ./chipyard
 SIMS = $(CHIPYARD)/sims
 FIRESIM = $(SIMS)/firesim
+FIREMARSHAL = $(CHIPYARD)/software/firemarshal
 FIRESIM_STAGING = $(SIMS)/firesim-staging
 PLATFORM = rhsresearch_nitefury_ii
 TARGET_PROJECT = firesim
@@ -91,11 +92,19 @@ CHIPYARD_SUBMODULES = generators/ara \
 		      generators/vexiiriscv \
 		      sims/firesim \
 		      tools/cde \
-		      tools/firrtl2
-CHIPYARD_SUBMODULES_RECURSIVE = software/firemarshal \
-				tools/dsptools \
+		      tools/firrtl2 \
+		      software/firemarshal
+
+CHIPYARD_SUBMODULES_RECURSIVE = tools/dsptools \
 				tools/fixedpoint \
 				tools/rocket-dsp-utils
+
+FIREMARSHAL_SUBMODULES = boards/default/firmware/opensbi \
+			 boards/default/distros/br/buildroot \
+			 wlutil/busybox \
+			 boards/firechip/drivers/icenet-driver \
+			 boards/firechip/drivers/iceblk-driver
+
 FIRESIM_SUBMODULES = sim/cde \
 		     sim/rocket-chip \
 		     sim/diplomacy \
@@ -110,9 +119,10 @@ BORG_DIR = ./chipyard/generators/borg/src/main/scala
 chipyard_setup:
 	git clone git@github.com:ucb-bar/chipyard.git
 	cd $(CHIPYARD); git checkout -b $(CHIPYARD_VERSION) $(CHIPYARD_VERSION)
-	cd $(CHIPYARD); git submodule update -j 8 --init $(CHIPYARD_SUBMODULES)
-	cd $(CHIPYARD); git submodule update -j 8 --init --recursive $(CHIPYARD_SUBMODULES_RECURSIVE)
-	cd $(FIRESIM) && git submodule update --init $(FIRESIM_SUBMODULES)
+	cd $(CHIPYARD); git submodule update -j 25 --filter=tree:0 --depth=1 --init $(CHIPYARD_SUBMODULES)
+	cd $(CHIPYARD); git submodule update -j 8 --filter=tree:0 --depth=1 --init --recursive $(CHIPYARD_SUBMODULES_RECURSIVE)
+	cd $(FIRESIM) && git submodule update -j 5 --filter=tree:0 --depth=1 --init $(FIRESIM_SUBMODULES)
+	cd $(FIREMARSHAL) && git submodule update -j 5 --filter=tree:0 --depth=1 --init $(FIREMARSHAL_SUBMODULES)
 	cd $(CHIPYARD); git submodule add git@github.com:gonsolo/borg_generator.git generators/borg
 
 # Miscellaneous ####################################################################################
@@ -200,7 +210,6 @@ program_device:
 
 # Kernel ##########################################################################################
 
-FIREMARSHAL = $(CHIPYARD)/software/firemarshal
 IMAGES_FIRECHIP = $(FIREMARSHAL)/images/firechip
 BR_BASE = $(IMAGES_FIRECHIP)/br-base
 BASE_BIN_DWARF = $(BR_BASE)/br-base-bin-dwarf
@@ -213,9 +222,7 @@ KERNEL_VERSION = firesim-v66-v6.11.5-borg
 # Use our custom Linux kernel with Borg drivers.
 distro_setup:
 	cd $(BOARDS)/default/linux; \
-		git remote add gonsolo git@github.com:gonsolo/linux.git; \
-		git fetch gonsolo; \
-		git checkout -b $(KERNEL_VERSION) gonsolo/$(KERNEL_VERSION)
+		git clone --filter=tree:0 --depth=1 --branch $(KERNEL_VERSION) --reference ~/src/linux git@github.com:gonsolo/linux.git; \
 
 BUSYBOX = $(FIREMARSHAL)/wlutil/busybox
 
@@ -316,6 +323,6 @@ clean: clean_logs
 # All steps that can be done automatically after cloning
 1to7: setup apply_patches driver bitstream distro xdma_install program_device
 
-.PHONY: all apply_patches bitstream clean clean_bitstream clean_driver clean_logs connect_debian \
-	disconnect_debian distro_setup dma_ip_drivers_setup edit_dts driver generate_env help \
-	ls_distro ls_driver qemu_debian reset_patches run_simulation setup xdma xz
+.PHONY: all apply_patches bitstream chipyard_setup clean clean_bitstream clean_driver clean_logs \
+	connect_debian disconnect_debian distro_setup dma_ip_drivers_setup edit_dts driver \
+	generate_env help ls_distro ls_driver qemu_debian reset_patches run_simulation setup xdma xz
