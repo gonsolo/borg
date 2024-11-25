@@ -24,13 +24,6 @@ index f50564e6..5851600c 100644
  // Components of FireSim
  
  lazy val firrtl2 = freshProject("firrtl2", file("./tools/firrtl2"))
-diff --git a/generators/borg b/generators/borg
-index 29185493..5d522ba4 160000
---- a/generators/borg
-+++ b/generators/borg
-@@ -1 +1 @@
--Subproject commit 2918549316e6c8a448b8cd4164162622d517aac1
-+Subproject commit 5d522ba41d1053787b014bee65e43910ed8040a5
 diff --git a/generators/chipyard/src/main/scala/DigitalTop.scala b/generators/chipyard/src/main/scala/DigitalTop.scala
 index c4fa17aa..a3697e7f 100644
 --- a/generators/chipyard/src/main/scala/DigitalTop.scala

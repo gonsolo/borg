@@ -237,7 +237,7 @@ reset_patches:
 	cd $(DRIVERS)/iceblk-driver && git checkout
 
 refresh_patch:
-	cd $(CHIPYARD); git diff --ignore-submodules=dirty > ../chipyard.patch
+	cd $(CHIPYARD); git diff --ignore-submodules > ../chipyard.patch
 
 # Compile the kernel and bootloader into one file: $(BASE_BIN)
 distro: $(BASE_BIN)
