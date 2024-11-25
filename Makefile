@@ -54,9 +54,10 @@ help:
 	@echo "12.     	qemu_debian:     	Run Debian image via qemu. Much faster than simulation"
 	@echo "13.     	clean:     		Clean up everything."
 	@echo "14.     	clean_driver:     	Clean up driver."
-	@echo "15.     	clean_distro:     	Clean up distro."
-	@echo "16.     	clean_distro_kernel:    Clean up distro kernel."
-	@echo "17.     	xz:     		Compress Debian image for backup."
+	@echo "15.     	clean_bitstream:     	Clean up bitstream project files."
+	@echo "16.     	clean_distro:     	Clean up distro."
+	@echo "17.     	clean_distro_kernel:    Clean up distro kernel."
+	@echo "18.     	xz:     		Compress Debian image for backup."
 
 # Setup ###########################################################################################
 
@@ -118,6 +119,9 @@ chipyard_setup:
 ls_driver:
 	@ls -lh $(DRIVER)
 
+ls_sv:
+	@ls -lh $(SV)
+
 edit_dts:
 	vi $(DTS)
 
@@ -166,6 +170,9 @@ generate_env:
 
 clean_driver:
 	rm -f $(SV) $(DRIVER)
+
+clean_bitstream:
+	rm -rf project project.cache project.srcs
 
 # Build Bitstream  #################################################################################
 
@@ -227,6 +234,9 @@ reset_patches:
 	cd $(FIRESIM) && git checkout .
 	cd $(DRIVERS)/icenet-driver && git checkout
 	cd $(DRIVERS)/iceblk-driver && git checkout
+
+refresh_patch:
+	cd $(CHIPYARD); git diff --ignore-submodules=dirty > ../chipyard.patch
 
 # Compile the kernel and bootloader into one file: $(BASE_BIN)
 distro: $(BASE_BIN)
@@ -302,7 +312,6 @@ clean: clean_logs
 	rm -f out.mcs $(BITSTREAM) out.prm project.srcs
 	rm -rf xsim.dir .Xil
 
-.PHONY: all apply_patches bitstream clean \
-	clean_driver clean_logs connect_debian disconnect_debian distro_setup dma_ip_drivers_setup \
-	edit_dts driver generate_env help ls_distro ls_driver qemu_debian reset_patches \
-	run_simulation setup xdma xz
+.PHONY: all apply_patches bitstream clean clean_bitstream clean_driver clean_logs connect_debian \
+	disconnect_debian distro_setup dma_ip_drivers_setup edit_dts driver generate_env help \
+	ls_distro ls_driver qemu_debian reset_patches run_simulation setup xdma xz
