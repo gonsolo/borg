@@ -58,6 +58,7 @@ help:
 	@echo "16.     	clean_distro:     	Clean up distro."
 	@echo "17.     	clean_distro_kernel:    Clean up distro kernel."
 	@echo "18.     	xz:     		Compress Debian image for backup."
+	@echo "19.     	1to7: 			Run commands 1 to 7."
 
 # Setup ###########################################################################################
 
@@ -311,6 +312,9 @@ clean: clean_logs
 	rm -rf $(CHIPYARD) project project.cache dma_ip_drivers
 	rm -f out.mcs $(BITSTREAM) out.prm project.srcs
 	rm -rf xsim.dir .Xil
+
+# All steps that can be done automatically after cloning
+1to7: setup apply_patches driver bitstream distro xdma_install program_device
 
 .PHONY: all apply_patches bitstream clean clean_bitstream clean_driver clean_logs connect_debian \
 	disconnect_debian distro_setup dma_ip_drivers_setup edit_dts driver generate_env help \
