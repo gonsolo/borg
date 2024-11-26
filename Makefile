@@ -208,7 +208,7 @@ $(BITSTREAM): $(DRIVER)
 
 # You have to have a Nitefury II FPGA installed.
 program_device:
-	vivado_lab -mode tcl -source program.tcl
+	vivado -mode tcl -source program.tcl
 	@echo "Please reboot after flashing Nitefury, otherwise it won't work!"
 
 # Kernel ##########################################################################################
