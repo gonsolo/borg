@@ -43,7 +43,7 @@ help:
 	@echo " 1.     	setup:     		Clone all repositories and set them up. 		- 		?"
 	@echo " 2.     	apply_patches: 		Patch chipyard with Borg. 				1 		<1s"
 	@echo " 3.     	driver:    		Build the driver that's used to run the simulation. 	2 		2m30s"
-	@echo " 4.     	bitstream: 		Build the file that's used to flash the FPGA. 		2 		?"
+	@echo " 4.     	bitstream: 		Build the file that's used to flash the FPGA. 		2 		73m"
 	@echo " 5.     	distro: 		Make Linux kernel and bootloader. 			1 		?"
 	@echo " 6.     	xdma_install: 		Install XDMA drivers. 					1 		<1s"
 	@echo " 7.     	program_device		Flash the FPGA with the hex file. 			4 		?"
