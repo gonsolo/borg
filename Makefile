@@ -133,6 +133,9 @@ ls_driver:
 ls_sv:
 	@ls -lh $(SV)
 
+ls_kernel:
+	@ls -lh $(BOARDS)/default/linux/vmlinux
+
 edit_dts:
 	vi $(DTS)
 
