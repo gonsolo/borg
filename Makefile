@@ -221,7 +221,7 @@ KERNEL_VERSION = firesim-v66-v6.11.5-borg
 
 # Use our custom Linux kernel with Borg drivers.
 distro_setup:
-	cd $(BOARDS)/default/linux; \
+	cd $(BOARDS)/default; \
 		git clone --filter=tree:0 --depth=1 --branch $(KERNEL_VERSION) --reference ~/src/linux git@github.com:gonsolo/linux.git; \
 
 BUSYBOX = $(FIREMARSHAL)/wlutil/busybox
