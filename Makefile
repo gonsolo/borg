@@ -33,7 +33,7 @@ DRIVER =$(FIRESIM)/sim/output/$(PLATFORM)/$(QUINTUPLET)/FireSim-rhsresearch_nite
 BITSTREAM = out.bin
 
 # The device tree
-DTS = $(FIRESIM_STAGING)/generated-src/firechip.chip.FireSim.BorgConfig/firechip.chip.FireSim.BorgConfig.dts
+DTS = $(FIRESIM_STAGING)/generated-src/firechip.chip.FireSim.$(TARGET_CONFIG)/firechip.chip.FireSim.$(TARGET_CONFIG).dts
 
 all: help
 
