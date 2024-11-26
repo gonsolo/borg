@@ -47,11 +47,11 @@ help:
 	@echo " 5.     	distro: 		Make Linux kernel and bootloader. 			1"
 	@echo " 6.     	xdma_install: 		Install XDMA drivers. 					1"
 	@echo " 7.     	program_device		Flash the FPGA with the hex file. 			4"
-	@echo "-------------------------------- Reboot --------------------------------------------------------------------"
+	@echo "-------------------------------- Reboot -----------------------------------------------------------------"
 	@echo " 8.     	xdma_load:		Load xmda drivers. 					6"
-	@echo " 9.     	connect_debian: 	Connect the Debian image via nbd. 			debian.qcow2"
+	@echo " 9.     	connect_debian: 	Connect the Debian image via nbd. 			1"
 	@echo "10.     	run_simulation:		Run simulation. 					3 5 7 8 9"
-	@echo "Other: -----------------------------------------------------------------------------------------------------"
+	@echo "Other: --------------------------------------------------------------------------------------------------"
 	@echo "11.     	disconnect_debian:     	Disconnect Debian. Necessary for qemu_debian"
 	@echo "12.     	qemu_debian:     	Run Debian image via qemu. Much faster than simulation"
 	@echo "13.     	clean:     		Clean up everything."
@@ -112,7 +112,11 @@ FIRESIM_SUBMODULES = sim/cde \
 		     sim/berkeley-hardfloat \
 		     platforms/rhsresearch_nitefury_ii/NiteFury-and-LiteFury-firesim
 
-setup: chipyard_setup distro_setup dma_ip_drivers_setup
+setup: chipyard_setup distro_setup dma_ip_drivers_setup debian.qcow2
+
+debian.qcow2:
+	gdown 1JUwW6Wid5cio9gy35v-RlWJ_pRP9BcPs
+	unxz debian.qcow2.xz
 
 BORG_DIR = ./chipyard/generators/borg/src/main/scala
 
