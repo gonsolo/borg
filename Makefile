@@ -39,18 +39,18 @@ all: help
 
 help:
 	@echo "Targets:"
-	@echo " #      	command    		description 						needs"
-	@echo " 1.     	setup:     		Clone all repositories and set them up. 		-"
-	@echo " 2.     	apply_patches: 		Patch chipyard with Borg. 				1"
-	@echo " 3.     	driver:    		Build the driver that's used to run the simulation. 	2"
-	@echo " 4.     	bitstream: 		Build the file that's used to flash the FPGA. 		2"
-	@echo " 5.     	distro: 		Make Linux kernel and bootloader. 			1"
-	@echo " 6.     	xdma_install: 		Install XDMA drivers. 					1"
-	@echo " 7.     	program_device		Flash the FPGA with the hex file. 			4"
+	@echo " #      	command    		description 						needs 		time"
+	@echo " 1.     	setup:     		Clone all repositories and set them up. 		- 		?"
+	@echo " 2.     	apply_patches: 		Patch chipyard with Borg. 				1 		<1s"
+	@echo " 3.     	driver:    		Build the driver that's used to run the simulation. 	2 		2m30s"
+	@echo " 4.     	bitstream: 		Build the file that's used to flash the FPGA. 		2 		?"
+	@echo " 5.     	distro: 		Make Linux kernel and bootloader. 			1 		?"
+	@echo " 6.     	xdma_install: 		Install XDMA drivers. 					1 		<1s"
+	@echo " 7.     	program_device		Flash the FPGA with the hex file. 			4 		?"
 	@echo "-------------------------------- Reboot -----------------------------------------------------------------"
-	@echo " 8.     	xdma_load:		Load xmda drivers. 					6"
-	@echo " 9.     	connect_debian: 	Connect the Debian image via nbd. 			1"
-	@echo "10.     	run_simulation:		Run simulation. 					3 5 7 8 9"
+	@echo " 8.     	xdma_load:		Load xmda drivers. 					6 		<1s"
+	@echo " 9.     	connect_debian: 	Connect the Debian image via nbd. 			1 		<1s"
+	@echo "10.     	run_simulation:		Run simulation. 					3 5 7 8 9 	?"
 	@echo "Other: --------------------------------------------------------------------------------------------------"
 	@echo "11.     	disconnect_debian:     	Disconnect Debian. Necessary for qemu_debian"
 	@echo "12.     	qemu_debian:     	Run Debian image via qemu. Much faster than simulation"
@@ -187,12 +187,6 @@ $(SV) $(DRIVER):
 generate_env:
 	./generate_env.sh
 
-clean_driver:
-	rm -f $(SV) $(DRIVER)
-
-clean_bitstream:
-	rm -rf project project.cache project.srcs
-
 # Build Bitstream  #################################################################################
 
 PROJECT_0 = $(FIRESIM)/platforms/$(PLATFORM)/NiteFury-and-LiteFury-firesim/Sample-Projects/Project-0
@@ -208,6 +202,13 @@ $(BITSTREAM): $(DRIVER)
 	cp $(PROJECT_0_HDL)/user_efuse.v $(HDL)
 
 	vivado -mode batch -source top.tcl -tclargs $(FREQUENCY) $(STRATEGY)
+
+clean_driver:
+	rm -f $(SV) $(DRIVER)
+	rm -rf $(PROJECT_0)/cl_$(PLATFORM)-$(TARGET_PROJECT)-$(DESIGN)-$(TARGET_CONFIG)-$(PLATFORM_CONFIG)
+
+clean_bitstream:
+	rm -rf project project.cache project.srcs
 
 # Flash FPGA #######################################################################################
 
