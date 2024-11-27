@@ -179,23 +179,20 @@ index 1f03202e..8d48894b 100644
  
    size_t shnum;
 diff --git a/generators/firechip/chip/src/main/scala/TargetConfigs.scala b/generators/firechip/chip/src/main/scala/TargetConfigs.scala
-index f677b5ea..bb1a6553 100644
+index f677b5ea..67d770b6 100644
 --- a/generators/firechip/chip/src/main/scala/TargetConfigs.scala
 +++ b/generators/firechip/chip/src/main/scala/TargetConfigs.scala
-@@ -361,3 +361,16 @@ class FireSimLargeBoomSV39CospikeConfig extends Config(
+@@ -361,3 +361,13 @@ class FireSimLargeBoomSV39CospikeConfig extends Config(
    new WithFireSimConfigTweaks++
    new freechips.rocketchip.rocket.WithSV39 ++
    new chipyard.LargeBoomV3Config)
 +
 +class BorgConfig extends Config(
-+  new FireSimRocket1GiBDRAMConfig)
++    new borg.WithBorg ++
++    new freechips.rocketchip.subsystem.WithExtMemSize((1 << 28) * 1L) ++ // 256MB RAM
++    new WithDefaultFireSimBridges ++
++    new WithFireSimConfigTweaks ++
++    new freechips.rocketchip.rocket.WithNBigCores(1) ++
++    new chipyard.config.AbstractConfig)
 +
-+  //new FireSimRocketConfig) // Fails: Too much DRAM: 16GB
-+
-+  //new borg.WithBorg ++
-+  //new freechips.rocketchip.subsystem.WithExtMemSize((1 << 28) * 1L) ++
-+  //new WithDefaultFireSimBridges ++
-+  //new WithFireSimConfigTweaks ++
-+  //new freechips.rocketchip.rocket.WithNSmallCores(1) ++
-+  //new chipyard.config.AbstractConfig)
 +
