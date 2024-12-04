@@ -40,7 +40,7 @@ all: help
 help:
 	@echo "Targets:"
 	@echo " #      	command    		description 						needs 		time"
-	@echo " 1.     	setup:     		Clone all repositories and set them up. 		- 		?"
+	@echo " 1.     	setup:     		Clone all repositories and set them up. 		- 		8m10s"
 	@echo " 2.     	apply_patches: 		Patch chipyard with Borg. 				1 		<1s"
 	@echo " 3.     	driver:    		Build the driver that's used to run the simulation. 	2 		2m30s"
 	@echo " 4.     	bitstream: 		Build the file that's used to flash the FPGA. 		2 		73m"
