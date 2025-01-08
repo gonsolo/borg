@@ -334,4 +334,4 @@ clean: clean_logs
 
 .PHONY: all apply_patches bitstream chipyard_setup clean clean_bitstream clean_driver clean_logs \
 	connect_debian disconnect_debian distro_setup dma_ip_drivers_setup edit_dts driver \
-	generate_env help ls_distro ls_driver qemu_debian reset_patches run_simulation setup xdma xz
+	generate_env help ls_distro ls_driver qemu_debian reset_patches run_simulation setup xz
