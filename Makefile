@@ -35,7 +35,7 @@ BITSTREAM = out.bin
 # The device tree
 DTS = $(FIRESIM_STAGING)/generated-src/firechip.chip.FireSim.$(TARGET_CONFIG)/firechip.chip.FireSim.$(TARGET_CONFIG).dts
 
-all: help
+all: check_java help
 
 help:
 	@echo "Targets:"
@@ -113,6 +113,11 @@ FIRESIM_SUBMODULES = sim/cde \
 		     platforms/rhsresearch_nitefury_ii/NiteFury-and-LiteFury-firesim
 
 setup: chipyard_setup distro_setup dma_ip_drivers_setup debian.qcow2
+
+check_java: CheckJava.class
+	@java CheckJava
+CheckJava.class: CheckJava.java
+	@javac $<
 
 debian.qcow2:
 	gdown 1JUwW6Wid5cio9gy35v-RlWJ_pRP9BcPs
@@ -328,10 +333,12 @@ clean: clean_logs
 	rm -rf $(CHIPYARD) project project.cache dma_ip_drivers
 	rm -f out.mcs $(BITSTREAM) out.prm project.srcs
 	rm -rf xsim.dir .Xil
+	rm CheckJava.class
 
 # All steps that can be done automatically after cloning
 1to7: setup apply_patches driver bitstream distro xdma_install program_device
 
-.PHONY: all apply_patches bitstream chipyard_setup clean clean_bitstream clean_driver clean_logs \
-	connect_debian disconnect_debian distro_setup dma_ip_drivers_setup edit_dts driver \
-	generate_env help ls_distro ls_driver qemu_debian reset_patches run_simulation setup xz
+.PHONY: all apply_patches bitstream check_java chipyard_setup clean clean_bitstream clean_driver \
+	clean_logs connect_debian disconnect_debian distro_setup dma_ip_drivers_setup edit_dts \
+	driver generate_env help ls_distro ls_driver qemu_debian reset_patches run_simulation setup \
+	xz

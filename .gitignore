@@ -16,3 +16,4 @@ latency_histogram.csv
 memory_stats0.csv
 .bsp
 target
+CheckJava.class
