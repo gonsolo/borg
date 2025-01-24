@@ -11,6 +11,7 @@ out.bin
 dma_ip_drivers
 blkdev-log0
 debian.qcow2
+debian.qcow2.gz
 heartbeat.csv
 latency_histogram.csv
 memory_stats0.csv

@@ -1,3 +1,11 @@
+# 1. Type "make" to get a list of targets. Run all these until you can run a simulation.
+# 2. "make qemu_simulation" to run RISC-V Debian.
+#    Inside is a Mesa (github.com:gonsolo/mesa) with a borg branch and a sample Vulkan application
+#    (github.com:gonsolo/VulkanHpp-Compute-Sample). Compile both and install them.
+# 3. Inside RISC-V Debian check Borg via "dmesg|grep borg"
+#    Check whether there is a borg device in /sys/devices/platform/soc.
+#    "make run_simulation", login with root, change to src/mesa/gonsolo dir and "make test_borg". 
+
 FREQUENCY = 50
 
 STRATEGY = TIMING
@@ -59,8 +67,8 @@ help:
 	@echo "15.     	clean_bitstream:     	Clean up bitstream project files."
 	@echo "16.     	clean_distro:     	Clean up distro."
 	@echo "17.     	clean_distro_kernel:    Clean up distro kernel."
-	@echo "18.     	xz:     		Compress Debian image for backup."
-	@echo "19.     	1to7: 			Run commands 1 to 7."
+	@echo "18.     	1to7: 			Run commands 1 to 7."
+	@echo "19.     	rclone_sync: 		Sync Debian image to Google Drive."
 
 # Setup ###########################################################################################
 
@@ -118,10 +126,6 @@ check_java: CheckJava.class
 	@java CheckJava
 CheckJava.class: CheckJava.java
 	@javac $<
-
-debian.qcow2:
-	gdown 1JUwW6Wid5cio9gy35v-RlWJ_pRP9BcPs
-	unxz debian.qcow2.xz
 
 BORG_DIR = ./chipyard/generators/borg/src/main/scala
 
@@ -322,9 +326,15 @@ qemu_debian:
 # SSH: ssh root@localhost -p 2222
 # FTP: sftp -P 2222 root@localhost
 
-# Compress Debian image for storing in Google Drive
-xz:
-	xz --verbose --keep debian.qcow2
+# Compress and sync Debian image for storing in Google Drive
+debian.qcow2.gz:
+	gzip --verbose --keep --rsyncable debian.qcow2
+rclone_sync: debian.qcow2.gz
+	rclone sync --interactive debian.qcow2.gz remote:
+# If there is no Debian image, get it from Google Drive
+debian.qcow2:
+	rclone copy --interactive remote:debian.qcow2.gz .
+	gunzip debian.qcow2.gz
 
 clean_logs:
 	rm -f *.jou *.log
@@ -340,5 +350,5 @@ clean: clean_logs
 
 .PHONY: all apply_patches bitstream check_java chipyard_setup clean clean_bitstream clean_driver \
 	clean_logs connect_debian disconnect_debian distro_setup dma_ip_drivers_setup edit_dts \
-	driver generate_env help ls_distro ls_driver qemu_debian reset_patches run_simulation setup \
-	xz
+	driver generate_env help ls_distro ls_driver qemu_debian rclone_sync reset_patches \
+	run_simulation setup
