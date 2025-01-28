@@ -6,6 +6,8 @@
 #    Check whether there is a borg device in /sys/devices/platform/soc.
 #    "make run_simulation", login with root, change to src/mesa/gonsolo dir and "make test_borg". 
 
+# Debug DRM with: "echo 0x19F | sudo tee /sys/module/drm/parameters/debug" before make test_borg in run_simulation.
+
 FREQUENCY = 50
 
 STRATEGY = TIMING
