@@ -150,7 +150,7 @@ ls_sv:
 	@ls -lh $(SV)
 
 ls_kernel:
-	@ls -lh $(BOARDS)/default/linux/vmlinux
+	@ls -lh $(LINUX)/vmlinux
 
 edit_dts:
 	vi $(DTS)
@@ -235,6 +235,7 @@ BR_BASE = $(IMAGES_FIRECHIP)/br-base
 BASE_BIN_DWARF = $(BR_BASE)/br-base-bin-dwarf
 BASE_BIN = $(BR_BASE)/br-base-bin
 BOARDS = $(FIREMARSHAL)/boards
+LINUX = $(BOARDS)/default/linux
 DRIVERS = $(BOARDS)/firechip/drivers
 
 KERNEL_VERSION = firesim-v66-v6.11.5-borg
@@ -273,9 +274,11 @@ $(BASE_BIN):
 clean_distro_kernel:
 	rm -f $(BASE_BIN)
 clean_distro:
-	cd $(BOARDS)/default/linux; make mrproper
+	cd $(LINUX); make mrproper
 	cd $(DRIVERS)/icenet-driver; make clean
 	cd $(DRIVERS)/iceblk-driver; make clean
+pull_distro:
+	cd $(LINUX); git pull; git show --summary
 update_distro: clean_distro clean_distro_kernel distro
 ls_distro:
 	ls -lh $(BASE_BIN)
