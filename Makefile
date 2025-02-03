@@ -8,6 +8,13 @@
 
 # Debug DRM with: "echo 0x19F | sudo tee /sys/module/drm/parameters/debug" before make test_borg in run_simulation.
 
+# Verilator
+# 1. Build github.com:riscv-collab/riscv-gnu-toolchain with "--with-cmodel=medany" for libgloss-htif and install to ~/riscv
+# 2. Submodule init toolchains/libgloss and install to ~/riscv
+# 3. Compile tests/borg.c as described in https://chipyard.readthedocs.io/en/latest/Software/Baremetal.html
+# 4. Cd sims/verilator and "RISCV=~ make CONFIG=BorgRocketConfig VERILATOR_THREADS=12 BINARY=../../tests/borg.riscv LOADMEM=1 run-binary-fast"
+#    Should take only a few seconds
+
 FREQUENCY = 50
 
 STRATEGY = TIMING

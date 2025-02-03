@@ -35,6 +35,23 @@ index c4fa17aa..a3697e7f 100644
  {
    override lazy val module = new DigitalTopModule(this)
  }
+diff --git a/generators/chipyard/src/main/scala/config/MMIOAcceleratorConfigs.scala b/generators/chipyard/src/main/scala/config/MMIOAcceleratorConfigs.scala
+index 3c8ca45a..3fe63bb8 100644
+--- a/generators/chipyard/src/main/scala/config/MMIOAcceleratorConfigs.scala
++++ b/generators/chipyard/src/main/scala/config/MMIOAcceleratorConfigs.scala
+@@ -40,6 +40,12 @@ class InitZeroRocketConfig extends Config(
+   new chipyard.config.AbstractConfig)
+ // DOC include end: InitZeroRocketConfig
+ 
++class BorgRocketConfig extends Config(
++  new borg.WithBorg() ++
++  new freechips.rocketchip.rocket.WithNBigCores(1) ++
++  new freechips.rocketchip.subsystem.WithoutTLMonitors ++
++  new chipyard.config.AbstractConfig)
++
+ class StreamingPassthroughRocketConfig extends Config(
+   new chipyard.example.WithStreamingPassthrough ++          // use top with tilelink-controlled streaming passthrough
+   new freechips.rocketchip.rocket.WithNHugeCores(1) ++
 diff --git a/generators/firechip/bridgestubs/src/main/cc/bridges/tracerv/tracerv_dwarf.cc b/generators/firechip/bridgestubs/src/main/cc/bridges/tracerv/tracerv_dwarf.cc
 index 8665643f..b829f13c 100644
 --- a/generators/firechip/bridgestubs/src/main/cc/bridges/tracerv/tracerv_dwarf.cc
@@ -195,15 +212,3 @@ index f677b5ea..67d770b6 100644
 +    new chipyard.config.AbstractConfig)
 +
 +
-diff --git a/project/plugins.sbt b/project/plugins.sbt
-index 02c7ce7f..441d7e56 100644
---- a/project/plugins.sbt
-+++ b/project/plugins.sbt
-@@ -1,6 +1,6 @@
- addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "2.1.1")
- addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.10.4")
--addSbtPlugin("ch.epfl.scala" % "sbt-bloop" % "1.5.6")
-+addSbtPlugin("ch.epfl.scala" % "sbt-bloop" % "2.0.6")
- addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "1.1.1")
- addSbtPlugin("com.simplytyped" % "sbt-antlr4" % "0.8.2")
- addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.11.0")
