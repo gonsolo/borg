@@ -289,8 +289,9 @@ pull_distro:
 update_distro: clean_distro clean_distro_kernel distro
 ls_distro:
 	ls -lh $(BASE_BIN)
-# Compile manually:
-# make ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- vmlinux
+# Compile manually (vim-lsp only works with LLVM):
+# LLVM: make -j20 LLVM=1 ARCH=riscv vmlinux
+# GCC: make ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- vmlinux
 
 ####################################################################################################
 
