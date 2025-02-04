@@ -67,7 +67,7 @@ help:
 	@echo "-------------------------------- Reboot -----------------------------------------------------------------------------"
 	@echo " 8.     	xdma_load:		Load xmda drivers. 					6 		<1s"
 	@echo " 9.     	connect_debian: 	Connect the Debian image via nbd. 			1 		<1s"
-	@echo "10.     	run_simulation:		Run simulation. 					3 5 7 8 9 	?"
+	@echo "10.     	run_simulation:		Run simulation. 					3 5 7 8 9 	5m30"
 	@echo "Other: --------------------------------------------------------------------------------------------------------------"
 	@echo "11.     	disconnect_debian:     	Disconnect Debian. Necessary for qemu_debian"
 	@echo "12.     	qemu_debian:     	Run Debian image via qemu. Much faster than simulation"
