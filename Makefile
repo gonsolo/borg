@@ -245,7 +245,7 @@ BOARDS = $(FIREMARSHAL)/boards
 LINUX = $(BOARDS)/default/linux
 DRIVERS = $(BOARDS)/firechip/drivers
 
-KERNEL_VERSION = firesim-v66-v6.11.5-borg
+KERNEL_VERSION = firesim-v66-v6.13.1-borg
 
 # Use our custom Linux kernel with Borg drivers.
 distro_setup:
