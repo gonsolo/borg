@@ -8,7 +8,7 @@ simulator based on verilator.
 
 ## Sources
 
-1. The umbrella project is found at github.com:gonsolo/borg
+1. The umbrella project is found at https://github.com:gonsolo/borg
 2. A Mesa 3D user driver is located at https://github.com/gonsolo/mesa.
 3. The Kernel driver is at https://github.com/gonsolo/linux.
 4. The Vulkan sample application is at https://github.com/gonsolo/VulkanHpp-Compute-Sample.
@@ -24,8 +24,8 @@ The sample application also has to be downloaded and compiled in the RISC-V imag
 
 ### Based on:
 
-1. Berkeley's Chipyard: chipyard.readthedocs.io
-2. Linux: kernel.org
-3. Mesa: mesa3d.org
+1. [Chipyard](https://chipyard.readthedocs.io)
+2. [Linux](https://kernel.org)
+3. [Mesa](https://mesa3d.org)
 
 Copyright 2025 Andreas Wendleder
