@@ -23,10 +23,25 @@ simulator based on verilator.
 
 The sample application also has to be downloaded and compiled in the RISC-V image.
 
-### Based on:
+## Based on:
 
 1. [Chipyard](https://chipyard.readthedocs.io)
 2. [Linux](https://kernel.org)
 3. [Mesa](https://mesa3d.org)
+
+## Past and Future
+
+### What works
+* Running a sample Vulkan application within a RISC-V image in an FPGA Simulation non-functional without crashing.
+* Reading registers in bare-metal software simulation as well as from the kernel driver in an FPGA simulation.
+
+### Next steps
+1. Run sample application correctly.
+   - DMA upload of shader.
+   - Run shader.
+   - DMA download of result buffer.
+2. Render triangle
+   - Run vertex and triangle shaders.
+   - DMA download of framebuffer.
 
 Copyright 2025 Andreas Wendleder
