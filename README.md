@@ -8,7 +8,7 @@ simulator based on verilator.
 
 ## Sources
 
-1. The umbrella project is found at https://github.com/gonsolo/borg
+1. The umbrella project including the graphics hardware is found at https://github.com/gonsolo/borg
 2. A Mesa 3D user space Vulkan driver is located at https://github.com/gonsolo/mesa.
 3. The Kernel driver is at https://github.com/gonsolo/linux.
 4. The Vulkan sample application is at https://github.com/gonsolo/VulkanHpp-Compute-Sample.
