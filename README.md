@@ -14,9 +14,18 @@ simulator based on verilator.
 4. The Vulkan sample application is at https://github.com/gonsolo/VulkanHpp-Compute-Sample.
 
 ## Components:
+
 1. Hardware: After applying chipyard.patch the hardware is located at `chipyard/generators/borg`.
 2. Kernel driver: At setup time it is downloaded from github.com/gonsolo/linux.
 3. Mesa driver: Must be downloaded from github.com/gonsolo/mesa and compiled within the RISC-V
    image (debian.qcow2).
 
 The sample application also has to be downloaded and compiled in the RISC-V image (debian.qcow2).
+
+### Based on:
+
+1. Berkeley's Chipyard: chipyard.readthedocs.io
+2. Linux: kernel.org
+3. Mesa: mesa3d.org
+
+Copyright 2025 Andreas Wendleder
