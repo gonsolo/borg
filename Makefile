@@ -78,6 +78,7 @@ help:
 	@echo "17.     	clean_distro_kernel:    Clean up distro kernel."
 	@echo "18.     	1to7: 			Run commands 1 to 7."
 	@echo "19.     	rclone_sync: 		Sync Debian image to Google Drive."
+	@echo "20.     	sim: 			Simulate hardware using verilator."
 
 # Setup ###########################################################################################
 
@@ -348,6 +349,9 @@ rclone_sync: debian.qcow2.gz
 debian.qcow2:
 	rclone copy --interactive remote:debian.qcow2.gz .
 	gunzip debian.qcow2.gz
+
+sim:
+	cd $(CHIPYARD)/sims/verilator; ./borg.sh
 
 clean_logs:
 	rm -f *.jou *.log

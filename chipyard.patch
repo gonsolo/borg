@@ -223,12 +223,19 @@ index f677b5ea..67d770b6 100644
 +    new chipyard.config.AbstractConfig)
 +
 +
+diff --git a/sims/verilator/borg.sh b/sims/verilator/borg.sh
+new file mode 100755
+index 00000000..cc7daaf2
+--- /dev/null
++++ b/sims/verilator/borg.sh
+@@ -0,0 +1 @@
++RISCV=~ make CONFIG=BorgRocketConfig VERILATOR_THREADS=12 BINARY=../../tests/borg.riscv LOADMEM=1 run-binary-fast
 diff --git a/tests/borg.c b/tests/borg.c
 new file mode 100644
-index 00000000..d415e910
+index 00000000..69e7cf4d
 --- /dev/null
 +++ b/tests/borg.c
-@@ -0,0 +1,15 @@
+@@ -0,0 +1,12 @@
 +#include <stdio.h>
 +#include "mmio.h"
 +
@@ -237,10 +244,7 @@ index 00000000..d415e910
 +
 +int main(void)
 +{
-+  uint32_t test1 = reg_read32(BORG_TEST1);
-+  uint32_t test2 = reg_read32(BORG_TEST2);
-+
-+  printf("Borg test1: %d\n", test1);
-+  printf("Borg test2: %d\n", test2);
-+  return 0;
++        uint32_t test1 = reg_read32(BORG_TEST1);
++        printf("Borg test1: %d\n", test1);
++        return 0;
 +}
