@@ -17,10 +17,11 @@ simulator based on verilator.
 
 1. Hardware: After applying chipyard.patch the hardware is located at `chipyard/generators/borg`.
 2. Kernel driver: At setup time it is downloaded from github.com/gonsolo/linux.
-3. Mesa driver: Must be downloaded from github.com/gonsolo/mesa and compiled within the RISC-V
-   image (debian.qcow2).
+3. Mesa driver: Must be downloaded from github.com/gonsolo/mesa and compiled within a RISC-V
+   image (there is one with Mesa and the sample application installed at
+   [debian.qcow2](https://drive.google.com/file/d/14fKEoJLiGNPCvdXPLr-cDweYWolDfrjg/view?usp=drive_link)).
 
-The sample application also has to be downloaded and compiled in the RISC-V image (debian.qcow2).
+The sample application also has to be downloaded and compiled in the RISC-V image.
 
 ### Based on:
 
