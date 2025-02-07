@@ -232,19 +232,46 @@ index 00000000..cc7daaf2
 +RISCV=~ make CONFIG=BorgRocketConfig VERILATOR_THREADS=12 BINARY=../../tests/borg.riscv LOADMEM=1 run-binary-fast
 diff --git a/tests/borg.c b/tests/borg.c
 new file mode 100644
-index 00000000..69e7cf4d
+index 00000000..748db00a
 --- /dev/null
 +++ b/tests/borg.c
-@@ -0,0 +1,12 @@
+@@ -0,0 +1,39 @@
 +#include <stdio.h>
 +#include "mmio.h"
 +
 +#define BORG_TEST1 0x4000
-+#define BORG_TEST2 0x4020
++#define BORG_START 0x4020
++#define BORG_COUNTER 0x4040
 +
 +int main(void)
 +{
 +        uint32_t test1 = reg_read32(BORG_TEST1);
 +        printf("Borg test1: %d\n", test1);
++
++        uint32_t counter = reg_read32(BORG_COUNTER);
++        printf("Borg counter: %d\n", counter);
++
++        puts("Write start.\n");
++        reg_write32(BORG_START, 1);
++        counter = reg_read32(BORG_COUNTER);
++        printf("Borg counter: %d\n", counter);
++        counter = reg_read32(BORG_COUNTER);
++        printf("Borg counter: %d\n", counter);
++        counter = reg_read32(BORG_COUNTER);
++        printf("Borg counter: %d\n", counter);
++        counter = reg_read32(BORG_COUNTER);
++        printf("Borg counter: %d\n", counter);
++
++        puts("Write start.\n");
++        reg_write32(BORG_START, 1);
++        counter = reg_read32(BORG_COUNTER);
++        printf("Borg counter: %d\n", counter);
++        counter = reg_read32(BORG_COUNTER);
++        printf("Borg counter: %d\n", counter);
++        counter = reg_read32(BORG_COUNTER);
++        printf("Borg counter: %d\n", counter);
++        counter = reg_read32(BORG_COUNTER);
++        printf("Borg counter: %d\n", counter);
++
 +        return 0;
 +}

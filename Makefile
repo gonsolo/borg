@@ -351,6 +351,7 @@ debian.qcow2:
 	gunzip debian.qcow2.gz
 
 sim:
+	cd $(CHIPYARD)/tests; make -f Makefile.borg
 	cd $(CHIPYARD)/sims/verilator; ./borg.sh
 
 clean_logs:
