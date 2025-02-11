@@ -18,3 +18,5 @@ memory_stats0.csv
 .bsp
 target
 CheckJava.class
+xsim.dir
+xvlog.pb

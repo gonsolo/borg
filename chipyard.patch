@@ -232,46 +232,63 @@ index 00000000..cc7daaf2
 +RISCV=~ make CONFIG=BorgRocketConfig VERILATOR_THREADS=12 BINARY=../../tests/borg.riscv LOADMEM=1 run-binary-fast
 diff --git a/tests/borg.c b/tests/borg.c
 new file mode 100644
-index 00000000..748db00a
+index 00000000..e0744902
 --- /dev/null
 +++ b/tests/borg.c
-@@ -0,0 +1,39 @@
+@@ -0,0 +1,56 @@
 +#include <stdio.h>
 +#include "mmio.h"
 +
 +#define BORG_TEST1 0x4000
-+#define BORG_START 0x4020
-+#define BORG_COUNTER 0x4040
++#define BORG_READ_KICK 0x4020
++#define BORG_WRITE_KICK 0x4040
++#define BORG_READ_SEEN 0x4060
++#define BORG_READ_DONE 0x4080
++#define BORG_DMA_BASE 0x88000000L
 +
 +int main(void)
 +{
 +        uint32_t test1 = reg_read32(BORG_TEST1);
 +        printf("Borg test1: %d\n", test1);
 +
-+        uint32_t counter = reg_read32(BORG_COUNTER);
-+        printf("Borg counter: %d\n", counter);
++        uint32_t kick = reg_read32(BORG_READ_KICK);
++        printf("Kick: %d\n", kick);
++        uint32_t seen = reg_read32(BORG_READ_SEEN);
++        printf("Seen: %d\n", seen);
++        uint32_t done = reg_read32(BORG_READ_DONE);
++        printf("Done: %d\n", done);
 +
-+        puts("Write start.\n");
-+        reg_write32(BORG_START, 1);
-+        counter = reg_read32(BORG_COUNTER);
-+        printf("Borg counter: %d\n", counter);
-+        counter = reg_read32(BORG_COUNTER);
-+        printf("Borg counter: %d\n", counter);
-+        counter = reg_read32(BORG_COUNTER);
-+        printf("Borg counter: %d\n", counter);
-+        counter = reg_read32(BORG_COUNTER);
-+        printf("Borg counter: %d\n", counter);
++        puts("Write 1.\n");
++        reg_write32(BORG_WRITE_KICK, 1);
++        kick = reg_read32(BORG_READ_KICK);
++        printf("Kick: %d\n", kick);
++        seen = reg_read32(BORG_READ_SEEN);
++        printf("Seen: %d\n", seen);
 +
-+        puts("Write start.\n");
-+        reg_write32(BORG_START, 1);
-+        counter = reg_read32(BORG_COUNTER);
-+        printf("Borg counter: %d\n", counter);
-+        counter = reg_read32(BORG_COUNTER);
-+        printf("Borg counter: %d\n", counter);
-+        counter = reg_read32(BORG_COUNTER);
-+        printf("Borg counter: %d\n", counter);
-+        counter = reg_read32(BORG_COUNTER);
-+        printf("Borg counter: %d\n", counter);
++        kick = reg_read32(BORG_READ_KICK);
++        printf("Kick: %d\n", kick);
++        seen = reg_read32(BORG_READ_SEEN);
++        printf("Seen: %d\n", seen);
++
++        kick = reg_read32(BORG_READ_KICK);
++        printf("Kick: %d\n", kick);
++        seen = reg_read32(BORG_READ_SEEN);
++        printf("Seen: %d\n", seen);
++
++        kick = reg_read32(BORG_READ_KICK);
++        printf("Kick: %d\n", kick);
++        seen = reg_read32(BORG_READ_SEEN);
++        printf("Seen: %d\n", seen);
++
++        kick = reg_read32(BORG_READ_KICK);
++        printf("Kick: %d\n", kick);
++        seen = reg_read32(BORG_READ_SEEN);
++        printf("Seen: %d\n", seen);
++        done = reg_read32(BORG_READ_DONE);
++        printf("Done: %d\n", done);
++
++        uint64_t dma = reg_read64(BORG_DMA_BASE);
++        printf("DMA: %ld\n", dma);
 +
 +        return 0;
 +}
