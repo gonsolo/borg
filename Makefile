@@ -78,7 +78,7 @@ help:
 	@echo "17.     	clean_distro_kernel:    Clean up distro kernel."
 	@echo "18.     	1to7: 			Run commands 1 to 7."
 	@echo "19.     	rclone_sync: 		Sync Debian image to Google Drive."
-	@echo "20.     	sim: 			Simulate hardware using verilator."
+	@echo "20.     	sim: 			Simulate hardware using verilator. 					3m"
 
 # Setup ###########################################################################################
 
