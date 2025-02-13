@@ -232,10 +232,10 @@ index 00000000..7f976112
 +RISCV=~ make CONFIG=BorgRocketConfig VERILATOR_THREADS=12 BINARY=../../tests/borg.riscv LOADMEM=1 run-binary
 diff --git a/tests/borg.c b/tests/borg.c
 new file mode 100644
-index 00000000..53e35824
+index 00000000..79f45d27
 --- /dev/null
 +++ b/tests/borg.c
-@@ -0,0 +1,39 @@
+@@ -0,0 +1,44 @@
 +#include <stdio.h>
 +#include "mmio.h"
 +
@@ -267,11 +267,16 @@ index 00000000..53e35824
 +        done = reg_read32(BORG_READ_DONE);
 +        printf("Done: %d\n", done);
 +
-+        uint64_t dma = reg_read64(BORG_DMA_BASE);
-+        printf("DMA 1: %lx\n", dma);
++        //uint64_t dma = reg_read64(BORG_DMA_BASE);
++        //printf("DMA 1: %lx\n", dma);
++        //dma = reg_read64(BORG_DMA_BASE + 0x40L);
++        //printf("DMA 2: %lx\n", dma);
 +
-+        dma = reg_read64(BORG_DMA_BASE + 0x40L);
-+        printf("DMA 2: %lx\n", dma);
++        uint64_t val1 = 0x1111222233334444;
++        reg_write64(BORG_DMA_BASE, val1);
++        uint64_t val2 = 0xFFFF1111AAAA3333;
++        reg_write64(BORG_DMA_BASE, val2 + 0x40L);
 +
 +        return 0;
 +}
++
