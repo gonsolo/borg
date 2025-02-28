@@ -233,18 +233,17 @@ index 00000000..c617ac7a
 +RISCV=~ make CONFIG=BorgRocketConfig VERILATOR_THREADS=12 BINARY=../../tests/borg.riscv LOADMEM=1 run-binary-debug
 diff --git a/tests/borg.c b/tests/borg.c
 new file mode 100644
-index 00000000..a68422e0
+index 00000000..6dabe3b4
 --- /dev/null
 +++ b/tests/borg.c
-@@ -0,0 +1,58 @@
+@@ -0,0 +1,92 @@
 +#include <stdio.h>
 +#include "mmio.h"
 +
 +#define BORG_TEST1 0x4000
 +#define BORG_READ_KICK 0x4020
 +#define BORG_WRITE_KICK 0x4040
-+#define BORG_READ_SEEN 0x4060
-+#define BORG_READ_DONE 0x4080
++#define BORG_COMPLETED 0x4060
 +#define BORG_DMA_BASE 0x88000000L
 +
 +int main(void)
@@ -278,7 +277,6 @@ index 00000000..a68422e0
 +                0xFFFFFFFFFFFFFFFF,
 +                0xFFFFFFFFFFFFFFF0, // 128 bytes, 16 lines
 +        };
-+        //int stride = 0x40L;
 +        int stride = 8; // bytes
 +        int lines= 16;
 +        puts("Writing memory.\n");
@@ -291,6 +289,42 @@ index 00000000..a68422e0
 +        //kick = reg_read32(BORG_READ_KICK);
 +        //printf("Kick is: %d\n", kick);
 +
++        while (reg_read32(BORG_COMPLETED) != 1) {
++                puts("Waiting for completion.\n");
++        }
++
++        uint64_t vals2[] = {
++                0xA111222233334444, // 8 bytes, 1 line
++                0xA222333344445555,
++                0xA333444455556666,
++                0xA444555566667777,
++
++                0xA555666677778888,
++                0xA666777788889999,
++                0xA77788889999AAAA,
++                0xA8889999AAAABBBB, // 64 bytes
++
++                0xA999AAAABBBBCCCC,
++                0xAAAABBBBCCCCDDDD,
++                0xABBBCCCCDDDDEEEE,
++                0xACCCDDDDEEEEFFFF,
++
++                0xAFFFFFFFFFFFFFFF,
++                0xAFFFFFFFFFFFFFFF,
++                0xAFFFFFFFFFFFFFFF,
++                0xAFFFFFFFFFFFFFF0, // 128 bytes, 16 lines
++        };
++        puts("Writing memory again.\n");
++        for (int i = 0; i < lines ; i++) {
++                reg_write64(BORG_DMA_BASE + i * stride, vals2[i]);
++        }
++
++        puts("Kick.\n");
++        reg_write32(BORG_WRITE_KICK, 1);
++
++        while (reg_read32(BORG_COMPLETED) != 1) {
++                puts("Waiting for completion again.\n");
++        }
 +        puts("Returning.\n");
 +        return 0;
 +}
