@@ -341,14 +341,14 @@ qemu_debian:
 # FTP: sftp -P 2222 root@localhost
 
 # Compress and sync Debian image for storing in Google Drive
-debian.qcow2.gz:
-	gzip --verbose --keep --rsyncable debian.qcow2
-rclone_sync: debian.qcow2.gz
-	rclone sync --interactive debian.qcow2.gz remote:
+debian.qcow2.zstd: debian.qcow2
+	zstd --keep -T0 --rsyncable $<
+rclone_sync: debian.qcow2.zst
+	rclone sync --interactive $< remote:
 # If there is no Debian image, get it from Google Drive
 debian.qcow2:
-	rclone copy --interactive remote:debian.qcow2.gz .
-	gunzip debian.qcow2.gz
+	rclone copy --interactive remote:debian.qcow2.zst .
+	unzstd debian.qcow2.zst
 
 sim:
 	cd $(CHIPYARD)/tests; make -f Makefile.borg
