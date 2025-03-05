@@ -233,17 +233,20 @@ index 00000000..c617ac7a
 +RISCV=~ make CONFIG=BorgRocketConfig VERILATOR_THREADS=12 BINARY=../../tests/borg.riscv LOADMEM=1 run-binary-debug
 diff --git a/tests/borg.c b/tests/borg.c
 new file mode 100644
-index 00000000..2f5aeecf
+index 00000000..67e0602f
 --- /dev/null
 +++ b/tests/borg.c
-@@ -0,0 +1,86 @@
+@@ -0,0 +1,93 @@
 +#include <stdio.h>
 +#include "mmio.h"
 +
-+#define BORG_TEST1 0x4000
-+#define BORG_KICK 0x4020
-+#define BORG_COMPLETED 0x4040
-+#define BORG_DMA_BASE 0x88000000L
++#define BORG_BASE               0x4000
++#define BORG_TEST1              BORG_BASE + 0x000
++#define BORG_KICK               BORG_BASE + 0x020
++#define BORG_COMPLETED          BORG_BASE + 0x040
++#define BORG_SHADER_POINTER     BORG_BASE + 0x060
++#define BORG_SHADER_SIZE        BORG_BASE + 0X100
++//#define BORG_DMA_BASE 0x88000000L
 +
 +int main(void)
 +{
@@ -275,10 +278,14 @@ index 00000000..2f5aeecf
 +        int lines= 16;
 +
 +        // Writing 128 bytes, 1024 is supported by hardware right now.
-+        puts("Writing memory.\n");
-+        for (int i = 0; i < lines ; i++) {
-+                reg_write64(BORG_DMA_BASE + i * stride, vals[i]);
-+        }
++        //puts("Writing memory.\n");
++        //for (int i = 0; i < lines ; i++) {
++        //        reg_write64(BORG_DMA_BASE + i * stride, vals[i]);
++        //}
++
++        puts("Writing shader pointer and size.");
++        reg_write64(BORG_SHADER_POINTER, 0xdeadbeef);
++        reg_write32(BORG_SHADER_SIZE, 4);
 +
 +        puts("Kick.\n");
 +        reg_write32(BORG_KICK, 1);
@@ -308,10 +315,10 @@ index 00000000..2f5aeecf
 +                0xAFFFFFFFFFFFFFFF,
 +                0xAFFFFFFFFFFFFFF0, // 128 bytes, 16 lines
 +        };
-+        puts("Writing memory again.\n");
-+        for (int i = 0; i < lines ; i++) {
-+                reg_write64(BORG_DMA_BASE + i * stride, vals2[i]);
-+        }
++        //puts("Writing memory again.\n");
++        //for (int i = 0; i < lines ; i++) {
++        //        reg_write64(BORG_DMA_BASE + i * stride, vals2[i]);
++        //}
 +
 +        puts("Kick.\n");
 +        reg_write32(BORG_KICK, 1);
