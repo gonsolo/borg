@@ -233,10 +233,10 @@ index 00000000..c617ac7a
 +RISCV=~ make CONFIG=BorgRocketConfig VERILATOR_THREADS=12 BINARY=../../tests/borg.riscv LOADMEM=1 run-binary-debug
 diff --git a/tests/borg.c b/tests/borg.c
 new file mode 100644
-index 00000000..67e0602f
+index 00000000..0cb95c41
 --- /dev/null
 +++ b/tests/borg.c
-@@ -0,0 +1,93 @@
+@@ -0,0 +1,109 @@
 +#include <stdio.h>
 +#include "mmio.h"
 +
@@ -246,36 +246,45 @@ index 00000000..67e0602f
 +#define BORG_COMPLETED          BORG_BASE + 0x040
 +#define BORG_SHADER_POINTER     BORG_BASE + 0x060
 +#define BORG_SHADER_SIZE        BORG_BASE + 0X100
-+//#define BORG_DMA_BASE 0x88000000L
++
++// Use for shader pointer
++#define BORG_DMA_BASE 0x88000000L
 +
 +int main(void)
 +{
 +        uint32_t test1 = reg_read32(BORG_TEST1);
 +        printf("Borg test1: %d\n", test1);
 +
-+        uint64_t vals[] = {
-+                0x1111222233334444, // 8 bytes, 1 line
-+                0x2222333344445555,
-+                0x3333444455556666,
-+                0x4444555566667777,
-+
-+                0x5555666677778888,
-+                0x6666777788889999,
-+                0x777788889999AAAA,
-+                0x88889999AAAABBBB, // 64 bytes
-+
-+                0x9999AAAABBBBCCCC,
-+                0xAAAABBBBCCCCDDDD,
-+                0xBBBBCCCCDDDDEEEE,
-+                0xCCCCDDDDEEEEFFFF,
-+
-+                0xFFFFFFFFFFFFFFFF,
-+                0xFFFFFFFFFFFFFFFF,
-+                0xFFFFFFFFFFFFFFFF,
-+                0xFFFFFFFFFFFFFFF0, // 128 bytes, 16 lines
++        uint32_t instructions[] = {
++                // r0 = mov rZ
++                0b00000000000000000000010100010011,
++                // test data
++                0b10101010101010101010101010101010,
 +        };
-+        int stride = 8; // bytes
-+        int lines= 16;
++
++        //uint64_t vals[] = {
++        //        0x1111222233334444, // 8 bytes, 1 line
++        //        0x2222333344445555,
++        //        0x3333444455556666,
++        //        0x4444555566667777,
++
++        //        0x5555666677778888,
++        //        0x6666777788889999,
++        //        0x777788889999AAAA,
++        //        0x88889999AAAABBBB, // 64 bytes
++
++        //        0x9999AAAABBBBCCCC,
++        //        0xAAAABBBBCCCCDDDD,
++        //        0xBBBBCCCCDDDDEEEE,
++        //        0xCCCCDDDDEEEEFFFF,
++
++        //        0xFFFFFFFFFFFFFFFF,
++        //        0xFFFFFFFFFFFFFFFF,
++        //        0xFFFFFFFFFFFFFFFF,
++        //        0xFFFFFFFFFFFFFFF0, // 128 bytes, 16 lines
++        //};
++        //int stride = 8; // bytes
++        //int lines= 16;
 +
 +        // Writing 128 bytes, 1024 is supported by hardware right now.
 +        //puts("Writing memory.\n");
@@ -283,8 +292,15 @@ index 00000000..67e0602f
 +        //        reg_write64(BORG_DMA_BASE + i * stride, vals[i]);
 +        //}
 +
++        int lines = 2;
++        int stride = 4; // bytes
++        for (int i = 0; i < lines ; i++) {
++                reg_write32(BORG_DMA_BASE + i * stride, instructions[i]);
++        }
++
 +        puts("Writing shader pointer and size.");
-+        reg_write64(BORG_SHADER_POINTER, 0xdeadbeef);
++        reg_write64(BORG_SHADER_POINTER, BORG_DMA_BASE);
++        // Shader size in bytes: One instruction (32 bits) equals four bytes
 +        reg_write32(BORG_SHADER_SIZE, 4);
 +
 +        puts("Kick.\n");
@@ -294,38 +310,38 @@ index 00000000..67e0602f
 +                puts("Waiting for completion.\n");
 +        }
 +
-+        uint64_t vals2[] = {
-+                0xA111222233334444, // 8 bytes, 1 line
-+                0xA222333344445555,
-+                0xA333444455556666,
-+                0xA444555566667777,
++        //uint64_t vals2[] = {
++        //        0xA111222233334444, // 8 bytes, 1 line
++        //        0xA222333344445555,
++        //        0xA333444455556666,
++        //        0xA444555566667777,
 +
-+                0xA555666677778888,
-+                0xA666777788889999,
-+                0xA77788889999AAAA,
-+                0xA8889999AAAABBBB, // 64 bytes
++        //        0xA555666677778888,
++        //        0xA666777788889999,
++        //        0xA77788889999AAAA,
++        //        0xA8889999AAAABBBB, // 64 bytes
 +
-+                0xA999AAAABBBBCCCC,
-+                0xAAAABBBBCCCCDDDD,
-+                0xABBBCCCCDDDDEEEE,
-+                0xACCCDDDDEEEEFFFF,
++        //        0xA999AAAABBBBCCCC,
++        //        0xAAAABBBBCCCCDDDD,
++        //        0xABBBCCCCDDDDEEEE,
++        //        0xACCCDDDDEEEEFFFF,
 +
-+                0xAFFFFFFFFFFFFFFF,
-+                0xAFFFFFFFFFFFFFFF,
-+                0xAFFFFFFFFFFFFFFF,
-+                0xAFFFFFFFFFFFFFF0, // 128 bytes, 16 lines
-+        };
++        //        0xAFFFFFFFFFFFFFFF,
++        //        0xAFFFFFFFFFFFFFFF,
++        //        0xAFFFFFFFFFFFFFFF,
++        //        0xAFFFFFFFFFFFFFF0, // 128 bytes, 16 lines
++        //};
 +        //puts("Writing memory again.\n");
 +        //for (int i = 0; i < lines ; i++) {
 +        //        reg_write64(BORG_DMA_BASE + i * stride, vals2[i]);
 +        //}
 +
-+        puts("Kick.\n");
-+        reg_write32(BORG_KICK, 1);
++        //puts("Kick.\n");
++        //reg_write32(BORG_KICK, 1);
 +
-+        while (reg_read32(BORG_COMPLETED) != 1) {
-+                puts("Waiting for completion again.\n");
-+        }
++        //while (reg_read32(BORG_COMPLETED) != 1) {
++        //        puts("Waiting for completion again.\n");
++        //}
 +        puts("Returning.\n");
 +        return 0;
 +}
