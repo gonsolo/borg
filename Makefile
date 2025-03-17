@@ -246,7 +246,7 @@ BOARDS = $(FIREMARSHAL)/boards
 LINUX = $(BOARDS)/default/linux
 DRIVERS = $(BOARDS)/firechip/drivers
 
-KERNEL_VERSION = firesim-v66-v6.13.1-borg
+KERNEL_VERSION = firesim-v66-v6.13.6-borg
 
 # Use our custom Linux kernel with Borg drivers.
 distro_setup:
@@ -341,7 +341,7 @@ qemu_debian:
 # FTP: sftp -P 2222 root@localhost
 
 # Compress and sync Debian image for storing in Google Drive
-debian.qcow2.zstd: debian.qcow2
+debian.qcow2.zst: debian.qcow2
 	zstd --keep -T0 --rsyncable $<
 rclone_sync: debian.qcow2.zst
 	rclone sync --interactive $< remote:
