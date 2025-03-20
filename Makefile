@@ -77,7 +77,7 @@ help:
 	@echo "16.     	clean_distro:     	Clean up distro."
 	@echo "17.     	clean_distro_kernel:    Clean up distro kernel."
 	@echo "18.     	1to7: 			Run commands 1 to 7."
-	@echo "19.     	rclone_sync: 		Sync Debian image to Google Drive."
+	@echo "19.     	backup: 		Sync Debian image to Google Drive."
 	@echo "20.     	sim: 			Simulate hardware using verilator. 					3m"
 
 # Setup ###########################################################################################
@@ -343,12 +343,9 @@ qemu_debian:
 # Compress and sync Debian image for storing in Google Drive
 debian.qcow2.zst: debian.qcow2
 	zstd --keep -T0 --rsyncable $<
-rclone_sync: debian.qcow2.zst
-	rclone sync --interactive $< remote:
-# If there is no Debian image, get it from Google Drive
-debian.qcow2:
-	rclone copy --interactive remote:debian.qcow2.zst .
-	unzstd debian.qcow2.zst
+backup: debian.qcow2.zst
+	cp $< ~/restic
+	restic -r rclone:remote:restic  --verbose backup ~/restic
 
 sim:
 	cd $(CHIPYARD)/tests; make -f Makefile.borg
@@ -366,7 +363,7 @@ clean: clean_logs
 # All steps that can be done automatically after cloning
 1to7: setup apply_patches driver bitstream distro xdma_install program_device
 
-.PHONY: all apply_patches bitstream check_java chipyard_setup clean clean_bitstream clean_driver \
-	clean_logs connect_debian disconnect_debian distro_setup dma_ip_drivers_setup edit_dts \
-	driver generate_env help ls_distro ls_driver qemu_debian rclone_sync reset_patches \
+.PHONY: all apply_patches backup bitstream check_java chipyard_setup clean clean_bitstream \
+	clean_driver clean_logs connect_debian disconnect_debian distro_setup dma_ip_drivers_setup \
+	edit_dts driver generate_env help ls_distro ls_driver qemu_debian reset_patches \
 	run_simulation setup
