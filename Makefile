@@ -347,6 +347,7 @@ backup: debian.qcow2.zst
 	cp $< ~/restic
 	restic -r rclone:remote:restic  --verbose backup ~/restic
 
+MAKEFLAGS = "-j20"
 sim:
 	cd $(CHIPYARD)/tests; make -f Makefile.borg
 	cd $(CHIPYARD)/sims/verilator; ./borg.sh
