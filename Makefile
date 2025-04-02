@@ -175,7 +175,7 @@ dma_ip_drivers_setup:
 	cd dma_ip_drivers; git checkout gonsolo
 
 xdma_install:
-	cd dma_ip_drivers/xdma/xdma; sudo make -j20 clean install
+	cd dma_ip_drivers/xdma/xdma; sudo make -j 20 clean install
 
 xdma_load:
 ifneq ($(shell lsmod|grep xdma)xxx, xxx)
@@ -291,7 +291,7 @@ update_distro: clean_distro clean_distro_kernel distro
 ls_distro:
 	ls -lh $(BASE_BIN)
 # Compile manually (vim-lsp only works with LLVM):
-# LLVM: make -j20 LLVM=1 ARCH=riscv vmlinux
+# LLVM: make -j 20 LLVM=1 ARCH=riscv vmlinux
 # GCC: make ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- vmlinux
 
 ####################################################################################################
@@ -347,7 +347,7 @@ backup: debian.qcow2.zst
 	cp $< ~/restic
 	restic -r rclone:remote:restic  --verbose backup ~/restic
 
-MAKEFLAGS = "-j20"
+MAKEFLAGS = "-j 20"
 sim:
 	cd $(CHIPYARD)/tests; make -f Makefile.borg
 	cd $(CHIPYARD)/sims/verilator; ./borg.sh
