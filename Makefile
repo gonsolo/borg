@@ -246,7 +246,7 @@ BOARDS = $(FIREMARSHAL)/boards
 LINUX = $(BOARDS)/default/linux
 DRIVERS = $(BOARDS)/firechip/drivers
 
-KERNEL_VERSION = firesim-v66-v6.13.6-borg
+KERNEL_VERSION = firesim-v66-v6.14.1-borg
 
 # Use our custom Linux kernel with Borg drivers.
 distro_setup:
@@ -272,8 +272,10 @@ reset_patches:
 	cd $(DRIVERS)/icenet-driver && git checkout
 	cd $(DRIVERS)/iceblk-driver && git checkout
 
-refresh_patch:
+refresh_chipyard_patch:
 	cd $(CHIPYARD); git diff --ignore-submodules > ../chipyard.patch
+refresh_iceblk_patch:
+	cd $(DRIVERS)/iceblk-driver; git diff > ../../../../../../../iceblk.patch
 
 # Compile the kernel and bootloader into one file: $(BASE_BIN)
 distro: $(BASE_BIN)
