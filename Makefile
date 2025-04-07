@@ -345,8 +345,10 @@ debian.qcow2.zst: debian.qcow2
 	zstd --keep -T0 --rsyncable $<
 backup: debian.qcow2.zst
 	cp $< ~/restic
-	restic -r rclone:remote:restic  --verbose backup ~/restic
-	#restic -r rclone:remote:restic  -o rclone.args="serve restic --stdio --tpslimit=10 --drive-chunk-size=256M --drive-use-trash=false --fast-list --drive-client-id 597919161687-915bu5109dbtfep56jh8v661fuvr6r5c.apps.googleusercontent.com --drive-client-secret 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" --verbose backup ~/restic
+	restic -r rclone:remote:restic  -o rclone.args="serve restic --stdio --tpslimit=10 --drive-chunk-size=256M --drive-use-trash=false --fast-list --drive-client-id 597919161687-915bu5109dbtfep56jh8v661fuvr6r5c.apps.googleusercontent.com --drive-client-secret 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" --verbose backup ~/restic
+# List snapshots: restic -r rclone:remote:restic snapshots
+# Delete snapshot: restic -r rclone:remote:restic forget <snapshot>
+# Clean up: restic -r rclone:remote:restic  -o rclone.args="serve restic --stdio --tpslimit=10 --drive-chunk-size=256M --drive-use-trash=false --fast-list --drive-client-id 597919161687-915bu5109dbtfep56jh8v661fuvr6r5c.apps.googleusercontent.com --drive-client-secret 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" --verbose prune
 
 MAKEFLAGS = "-j 20"
 sim:
