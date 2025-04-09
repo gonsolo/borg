@@ -109,6 +109,8 @@ CHIPYARD_SUBMODULES = generators/ara \
 		      generators/shuttle \
 		      generators/testchipip \
 		      generators/vexiiriscv \
+		      generators/radiance \
+		      generators/tacit \
 		      sims/firesim \
 		      tools/cde \
 		      tools/firrtl2 \
