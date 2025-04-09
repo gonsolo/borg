@@ -1,15 +1,3 @@
-diff --git a/.gitmodules b/.gitmodules
-index 3dad92dc..bf507670 100644
---- a/.gitmodules
-+++ b/.gitmodules
-@@ -163,3 +163,7 @@
- [submodule "generators/radiance"]
- 	path = generators/radiance
- 	url = https://github.com/ucb-bar/radiance.git
-+[submodule "generators/borg"]
-+	path = generators/borg
-+	url = git@github.com:gonsolo/borg_generator.git
-+
 diff --git a/build.sbt b/build.sbt
 index 414ee482..40bce1aa 100644
 --- a/build.sbt
