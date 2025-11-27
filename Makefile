@@ -365,7 +365,7 @@ clean: clean_logs
 	rm -rf $(CHIPYARD) project project.cache dma_ip_drivers
 	rm -f out.mcs $(BITSTREAM) out.prm project.srcs
 	rm -rf xsim.dir .Xil
-	rm CheckJava.class
+	rm -f CheckJava.class
 
 # All steps that can be done automatically after cloning
 1to7: setup apply_patches driver bitstream distro xdma_install program_device
