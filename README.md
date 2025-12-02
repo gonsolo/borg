@@ -12,3 +12,4 @@ every step of the pipeline, from high-level design and FPGA prototyping to the f
 RTL-to-GDS-flow. This strategic focus proves the viability of an open-source manufacturing and
 development pathway for future graphics hardware.
 
+The prototype based on Firesim can be found in the [PreNLnet](https://github.com/gonsolo/borg/tree/PreNLnet) branch.
