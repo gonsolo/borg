@@ -136,6 +136,37 @@ async def test_mmio_roundtrip(dut):
     assert m.parity_errors == 0, f"{m.parity_errors} parity errors"
 
 
+@cocotb.test()
+async def test_narrow_strap_round_trip(dut):
+    """The link_narrow strap must actually halve the lanes, in silicon.
+
+    This is the post-silicon recovery path: ASIC pins cannot be re-synthesized
+    after tapeout, so an elaboration-time w=8 would only be a different build,
+    useless to a fabricated part. Strapping input_PAD[2] high must make the SAME
+    chip train and carry traffic on d[7:0] alone, two beats per flit.
+    """
+    log = logging.getLogger("link")
+    await start_up(dut, link_narrow=1)
+    m = LinkMaster(dut, log, narrow=True)
+
+    assert await m.train(), (
+        "link_up never asserted with link_narrow strapped -- the runtime "
+        "w=16->w=8 mux is not engaging (LinkParams.narrowCapable)."
+    )
+    await m.idle(4)
+
+    for reg, val in ((0, 0x3C00), (7, 0x0FF0), (29, 0x5A5A)):
+        addr = reg * 4
+        await m.write32(addr, val)
+        await m.idle(4)
+        got = await m.read32(addr)
+        assert got is not None, f"no response to narrow read of gpr[{reg}]"
+        assert (got & 0xFFFF) == val, (
+            f"narrow gpr[{reg}]: wrote 0x{val:04x}, read back 0x{got & 0xFFFF:04x}"
+        )
+    assert m.parity_errors == 0, f"{m.parity_errors} parity errors in narrow mode"
+
+
 def chip_link_runner():
     proj_path = Path(__file__).resolve().parent
 

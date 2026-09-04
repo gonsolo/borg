@@ -22,7 +22,11 @@ object BorgOnlyMain extends App {
   // as BorgConfig.Wafer unchanged". BorgConfig.Wafer trims only the
   // interface (debugPorts=false), not the sizing.
   val cfg = BorgConfig.Wafer
-  val p   = LinkParams()
+  // narrowCapable: the tapeout gets the real runtime w=16 -> w=8 mux behind the
+  // link_narrow strap, not an elaboration-time width. Pins cannot be
+  // re-synthesized after tapeout, so this is the only form in which the
+  // post-silicon recovery mode actually exists.
+  val p   = LinkParams(narrowCapable = true)
 
   val targetDir = "out/hardware/borg/verilog_wafer"
   Emit.cleanTargetDir(targetDir)

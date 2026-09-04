@@ -58,9 +58,13 @@ OP_ACCESS_ACK, OP_ACCESS_ACK_DATA = 0, 1
 TRAIN_WORD = 0xA5A5    # Fill(w/8, 0xA5)
 
 
-def odd_parity(d: int, v: int) -> int:
-    """p = !(Cat(d, v).xorR) -- makes the total ones in {d, v, p} odd."""
-    bits = bin(d & ((1 << W) - 1)).count("1") + (v & 1)
+def odd_parity(d: int, v: int, width: int = W) -> int:
+    """p = !(Cat(d, v).xorR) -- makes the total ones in {d, v, p} odd.
+
+    `width` is the ACTIVE lane count: narrow mode ties d[15:8] low and excludes
+    it, so folding the dead half in here would disagree with the RTL.
+    """
+    bits = bin(d & ((1 << width) - 1)).count("1") + (v & 1)
     return 0 if (bits & 1) else 1
 
 
@@ -75,9 +79,14 @@ def header(chan: int, opcode: int, payload: int) -> int:
 class LinkMaster:
     """Drives the DN lanes and samples the UP lanes through the real pads."""
 
-    def __init__(self, dut, log):
+    def __init__(self, dut, log, narrow=False):
         self.dut = dut
         self.log = log
+        # link_narrow: drive d[7:0] only, two beats per flit (LSB slice first),
+        # d[15:8] tied low, parity over the live lanes. Mirrors the RTL's
+        # narrowCapable mux -- the post-silicon recovery mode.
+        self.narrow = narrow
+        self.aw = 8 if narrow else W       # active lane count
         self.dn_d = TRAIN_WORD
         self.dn_v = 1
         self.up_cred_level = 0     # toggle we drive to return UP credits
@@ -99,9 +108,10 @@ class LinkMaster:
     # -- pin level ----------------------------------------------------------
     def _apply(self):
         v = 0
-        v |= (self.dn_d & 0xFFFF) << DN_D_LO
+        d = self.dn_d & ((1 << self.aw) - 1)
+        v |= d << DN_D_LO
         v |= (self.dn_v & 1) << DN_V
-        v |= odd_parity(self.dn_d, self.dn_v) << DN_P
+        v |= odd_parity(d, self.dn_v, self.aw) << DN_P
         v |= (self.up_cred_level & 1) << UP_CRED
         self.dut.drv.value = v
         self.dut.drv_oe.value = self.drv_oe
@@ -147,7 +157,7 @@ class LinkMaster:
                 return int(c) if c in ("0", "1") else None
             # Parity is checked on every beat, idle included -- that is what
             # makes a dead cable detectable at all.
-            if self.check_parity and odd_parity(d, v) != p:
+            if self.check_parity and odd_parity(d, v, self.aw) != p:
                 self.parity_errors += 1
                 self.log.warning("parity error beat %d: d=0x%04x v=%d p=%d",
                                  self.beats, d, v, p)
@@ -167,7 +177,7 @@ class LinkMaster:
         self.dn_v = 1
         for _ in range(max_beats):
             s = await self.beat()
-            self.dn_d = (~self.dn_d) & 0xFFFF   # invert every beat
+            self.dn_d = (~self.dn_d) & ((1 << self.aw) - 1)  # live lanes only
             if s is not None and s[3] == 1:
                 self.log.info("link_up asserted after %d beats", self.beats)
                 self.check_parity = True
@@ -186,8 +196,15 @@ class LinkMaster:
         """Send one atomic packet, then the mandatory inter-packet gap."""
         self.dn_v = 1
         for f in flits:
-            self.dn_d = f & 0xFFFF
-            await self.beat()
+            if self.narrow:
+                # LSB slice first, matching LinkTx's serialization order.
+                self.dn_d = f & 0xFF
+                await self.beat()
+                self.dn_d = (f >> 8) & 0xFF
+                await self.beat()
+            else:
+                self.dn_d = f & 0xFFFF
+                await self.beat()
         await self.idle(GAP_BEATS)
 
     async def write32(self, addr, data, size=2, timeout_beats=200):
@@ -217,6 +234,7 @@ class LinkMaster:
         """
         got = []
         expect = None
+        half = None          # narrow: low slice awaiting its high slice
         for _ in range(timeout_beats):
             s = await self.beat()
             if s is None:
@@ -224,6 +242,13 @@ class LinkMaster:
             d, v, p, _up, _err = s
             if not v:
                 continue
+            if self.narrow:
+                # Two beats per flit, LSB slice first (LinkTx's order).
+                if half is None:
+                    half = d & 0xFF
+                    continue
+                d = ((d & 0xFF) << 8) | half
+                half = None
             got.append(d)
             if expect is None:
                 hdr = got[0]
