@@ -145,6 +145,19 @@ sim-gl: clone-pdk defines ## Run gate-level simulation with cocotb (after copy-f
 	cd cocotb; GL=1 PDK_ROOT=${PDK_ROOT} PDK=${PDK} SLOT=${SLOT} PAD=${PAD} SCL=${SCL} SRAM=${SRAM} python3 chip_top_tb.py
 .PHONY: sim-gl
 
+# cocotb lives in its own python3.13 env; the devShell's ambient python3 is
+# 3.14 and its PYTHONPATH mixes both (see the top-level Makefile's header).
+# Use cocotb's own interpreter and only its site-packages.
+COCOTB_PY := $(shell cocotb-config --python-bin 2>/dev/null || echo python3)
+
+sim-link: clone-pdk defines ## Run the Borg link pad-level tests (plan test 8)
+	cd cocotb; PYTHONPATH=$$COCOTB_PYTHONPATH PDK_ROOT=${PDK_ROOT} PDK=${PDK} SLOT=1x0p5 PAD=${PAD} SCL=${SCL} SRAM=${SRAM} $(COCOTB_PY) chip_link_tb.py
+.PHONY: sim-link
+
+sim-link-gl: clone-pdk defines ## Borg link pad-level tests, gate level (after copy-final)
+	cd cocotb; GL=1 PYTHONPATH=$$COCOTB_PYTHONPATH PDK_ROOT=${PDK_ROOT} PDK=${PDK} SLOT=1x0p5 PAD=${PAD} SCL=${SCL} SRAM=${SRAM} $(COCOTB_PY) chip_link_tb.py
+.PHONY: sim-link-gl
+
 sim-view: ## View simulation waveforms in GTKWave
 	gtkwave cocotb/sim_build/chip_top.fst
 .PHONY: sim-view
