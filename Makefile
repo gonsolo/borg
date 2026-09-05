@@ -86,6 +86,19 @@ generate_verilog: .verilog_stamp info.yaml
 
 generate_verilog_wafer: .verilog_wafer_stamp
 
+# Same design on the wafer.space 1x1 slot -- 40 bidir + 12 input-only pads
+# instead of 46 + 4, so BorgOnlyTop uses a different lane map (see its class
+# doc; it is a re-map, not a truncation).  Emitted to its own directory
+# because both slots produce a module named BorgOnlyTop with different port
+# widths -- mixing them in one directory would be silently wrong.
+.verilog_wafer_1x1_stamp: $(HAND_CHISEL) $(RDL_SRC) | rdl
+	$(MILL) asic.tt.runMain asic.tt.BorgOnly1x1Main
+	@python3 scripts/init_bram_zero.py out/hardware/borg/verilog_wafer_1x1
+	@sed -i 's|// synthesis translate_on\t.*|// synthesis translate_on|g' out/hardware/borg/verilog_wafer_1x1/*.sv
+	@touch $@
+
+generate_verilog_wafer_1x1: .verilog_wafer_1x1_stamp
+
 # Verilator simulation Verilog — flat MemBackendIO top (no QSPI), into
 # out/hardware/borg/verilog_sim/.  Used by simulation/verilator.
 .verilog_sim_stamp: $(HAND_CHISEL) $(RDL_SRC) | rdl

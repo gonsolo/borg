@@ -44,10 +44,17 @@ else
 endif
 
 AVAILABLE_SLOTS = 1x1 0p5x1 1x0p5 0p5x0p5
-# The Borg-only bridge's chip_core.sv only supports the 1x0.5 slot (its
-# BorgOnlyTop lane map fills exactly 46 bidir + 4 input pads -- see
-# chip_core.sv and slot_defines.svh). Also the only slot with a confirmed
-# CoB/motherboard path (wafer-space/chip-on-board-wire-bonded-pcbs' 1x0p5-cob).
+# The Borg-only bridge supports two of the four slots: 1x0p5 (46 bidir +
+# 4 input) and 1x1 (40 bidir + 12 input). BorgOnlyTop carries a lane map for
+# each -- they are genuinely different maps, since 1x1 trades six bidir pads
+# for eight extra input-only ones, so the input-direction link lanes move onto
+# the input pads to keep the link at the full w=16. The other two slots have
+# no map. See BorgOnlyTop's class doc and chip_core.sv's elaboration check.
+#
+# 1x0p5 remains the default: it is the slot the design has actually been
+# signed off on, and the one with a confirmed CoB/motherboard path
+# (wafer-space/chip-on-board-wire-bonded-pcbs' 1x0p5-cob). 1x1 is the target
+# for Borg II (FP32 + compute), which does not fit 1x0p5.
 DEFAULT_SLOT = 1x0p5
 
 # Slot can be any of AVAILABLE_SLOTS
@@ -100,9 +107,20 @@ defines:
 # Regenerates BorgOnlyTop's Verilog and librelane/generated_sources.yaml's
 # VERILOG_FILES list from it, so the two can never drift apart again (see
 # gen_librelane_sources.py's own doc for the real drift this replaces).
+# BorgOnlyTop has a lane map for two slots, emitted to separate directories
+# (see the top-level Makefile's generate_verilog_wafer_1x1 comment). Pick the
+# emission matching SLOT so a `SLOT=1x1` build does not silently synthesise
+# the 46-pad Verilog -- the pad counts would mismatch and chip_core's
+# elaboration check would fire.
+ifeq ($(SLOT),1x1)
+    WAFER_VERILOG_TARGET = generate_verilog_wafer_1x1
+else
+    WAFER_VERILOG_TARGET = generate_verilog_wafer
+endif
+
 generated-sources:
-	$(MAKE) -C ../.. generate_verilog_wafer
-	python3 scripts/gen_librelane_sources.py
+	$(MAKE) -C ../.. $(WAFER_VERILOG_TARGET)
+	python3 scripts/gen_librelane_sources.py $(SLOT)
 .PHONY: generated-sources
 
 librelane: clone-pdk defines generated-sources ## Run LibreLane flow (synthesis, PnR, verification)

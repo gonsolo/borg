@@ -122,32 +122,68 @@ class BorgOnlyCore(val cfg: BorgConfig, val p: LinkParams) extends Module {
   io.dbgO := dbgViews(io.dbgSel)
 }
 
+/** Which wafer.space slot's padring this build targets.
+  *
+  * The two differ in more than size: 1x1 trades six bidir pads for eight extra
+  * input-only ones, so the lane map is not a truncation of the 1x0.5 map -- the
+  * input-direction link lanes have to move onto the input-only pads to fit.
+  */
+sealed trait WaferSlot {
+  def numBidir: Int
+  def numInput: Int
+  def name: String
+}
+case object Slot1x0p5 extends WaferSlot {
+  val numBidir = 46; val numInput = 4; val name = "1x0p5"
+}
+case object Slot1x1 extends WaferSlot {
+  val numBidir = 40; val numInput = 12; val name = "1x1"
+}
+
 /** Pin-flattening `RawModule` wrapper: one bit per wafer.space pad, matching
   * [[chip_core]]'s `bidir_in`/`bidir_out`/`bidir_oe`/`input_in` convention exactly
   * (mirrors `tt_um_gonsolo_borg`'s flattening of Hutt's SoC ports for TT's pad
-  * interface).  46 bidir bits, 4 input bits, dedicated `clk`/`rst_n` -- fills the
-  * 1x0.5 slot's full 46 bidir + 4 input-only pad budget with no unused positions.
+  * interface).
+  *
+  * The design needs 27 output-direction and 23 input-direction lanes. Outputs
+  * can only live on bidir pads; inputs can live on either. That fits both slots,
+  * but differently:
+  *
+  *   - '''1x0.5''' (46 bidir + 4 input): every link lane on bidir, the 4 input
+  *     pads carrying only the static straps. Fills the budget exactly, no spare.
+  *   - '''1x1''' (40 bidir + 12 input): 27 outputs + 11 inputs on bidir (38 of
+  *     40, 2 spare), with the straps and dn_d[7:0] moved to the 12 input-only
+  *     pads. This is what keeps the link at the full w=16 -- the alternative,
+  *     running `narrowCapable` w=8 to free 16 pads, would fit trivially but
+  *     halve link bandwidth.
   */
-class BorgOnlyTop(val cfg: BorgConfig, val p: LinkParams) extends RawModule {
-  require(p.w == 16, "BorgOnlyTop's lane map assumes w=16 (dn_d/up_d each 16 bidir pads)")
+class BorgOnlyTop(
+    val cfg: BorgConfig,
+    val p: LinkParams,
+    val slot: WaferSlot = Slot1x0p5
+) extends RawModule {
+  require(p.w == 16, "BorgOnlyTop's lane map assumes w=16 (dn_d/up_d each 16 lanes)")
+
+  // Distinct Verilog module name per slot, so a slot/RTL mismatch is a hard
+  // "module not found" instead of a silent miswire.  Without this, building
+  // chip_core for one slot against the other slot's emission just resizes the
+  // ports -- yosys reports only "Warning: Resizing cell port
+  // chip_core.i_borg.bidirIn from 46 bits to 40 bits" and builds a wrong chip.
+  // 1x0.5 keeps the bare name so the signed-off flow and the pad-level cocotb
+  // test are untouched.
+  override def desiredName: String = slot match {
+    case Slot1x0p5 => "BorgOnlyTop"
+    case Slot1x1   => "BorgOnlyTop1x1"
+  }
 
   val clk      = IO(Input(Clock()))
   val rst_n    = IO(Input(Bool()))
-  val bidirIn  = IO(Input(UInt(46.W)))
-  val bidirOut = IO(Output(UInt(46.W)))
-  val bidirOe  = IO(Output(UInt(46.W)))
-  val inputIn  = IO(Input(UInt(4.W)))
+  val bidirIn  = IO(Input(UInt(slot.numBidir.W)))
+  val bidirOut = IO(Output(UInt(slot.numBidir.W)))
+  val bidirOe  = IO(Output(UInt(slot.numBidir.W)))
+  val inputIn  = IO(Input(UInt(slot.numInput.W)))
 
   val core = withClockAndReset(clk, !rst_n) { Module(new BorgOnlyCore(cfg, p)) }
-
-  core.io.dnD := bidirIn(15, 0)
-  core.io.dnV := bidirIn(16)
-  core.io.dnP := bidirIn(17)
-  core.io.upCred := bidirIn(37)
-
-  core.io.linkNarrow := inputIn(2)
-  core.io.linkFast   := inputIn(3)
-  core.io.dbgSel     := inputIn(1, 0)
 
   val dbgO = core.io.dbgO
 
@@ -155,26 +191,67 @@ class BorgOnlyTop(val cfg: BorgConfig, val p: LinkParams) extends RawModule {
   // non-contiguous positions, and bidirOe (below) is what actually decides
   // which of these bits reach a pad -- this only needs to get the *output*
   // lanes right.
-  val outVec = Wire(Vec(46, Bool()))
-  for (i <- 0 until 46) outVec(i) := false.B
-  for (i <- 0 until 18) outVec(i) := false.B // dn_d/dn_v/dn_p lanes: no drive
-  outVec(18) := core.io.dnCred
-  for (i <- 0 until 16) outVec(19 + i) := core.io.upD(i)
-  outVec(35) := core.io.upV
-  outVec(36) := core.io.upP
-  // bidir[37] = up_cred, an input lane -- no drive
-  outVec(38) := core.io.linkUp
-  outVec(39) := core.io.linkErr
-  for (i <- 0 until 6) outVec(40 + i) := dbgO(i)
-  bidirOut := outVec.asUInt
+  val outVec = Wire(Vec(slot.numBidir, Bool()))
+  val oeVec  = Wire(Vec(slot.numBidir, Bool()))
+  for (i <- 0 until slot.numBidir) { outVec(i) := false.B; oeVec(i) := false.B }
 
-  val oeVec = Wire(Vec(46, Bool()))
-  for (i <- 0 until 18) oeVec(i) := false.B // dn_d/dn_v/dn_p: input only
-  oeVec(18) := true.B // dn_cred: output
-  for (i <- 19 until 37) oeVec(i) := true.B // up_d/up_v/up_p: output
-  oeVec(37) := false.B // up_cred: input only
-  oeVec(38) := true.B
-  oeVec(39) := true.B
-  for (i <- 40 until 46) oeVec(i) := true.B
-  bidirOe := oeVec.asUInt
+  slot match {
+    case Slot1x0p5 =>
+      // Unchanged from the map validated by the pad-level cocotb test
+      // (asic/wafer.space/cocotb/chip_link_tb.py, test 8) -- do not renumber.
+      core.io.dnD    := bidirIn(15, 0)
+      core.io.dnV    := bidirIn(16)
+      core.io.dnP    := bidirIn(17)
+      core.io.upCred := bidirIn(37)
+
+      core.io.linkNarrow := inputIn(2)
+      core.io.linkFast   := inputIn(3)
+      core.io.dbgSel     := inputIn(1, 0)
+
+      outVec(18) := core.io.dnCred
+      for (i <- 0 until 16) outVec(19 + i) := core.io.upD(i)
+      outVec(35) := core.io.upV
+      outVec(36) := core.io.upP
+      // bidir[37] = up_cred, an input lane -- no drive
+      outVec(38) := core.io.linkUp
+      outVec(39) := core.io.linkErr
+      for (i <- 0 until 6) outVec(40 + i) := dbgO(i)
+
+      oeVec(18) := true.B // dn_cred
+      for (i <- 19 until 37) oeVec(i) := true.B // up_d/up_v/up_p
+      oeVec(38) := true.B
+      oeVec(39) := true.B
+      for (i <- 40 until 46) oeVec(i) := true.B
+
+    case Slot1x1 =>
+      // dn_d is split: low half on the input-only pads, high half on bidir.
+      // 38 of 40 bidir used; bidir[38..39] are spare and tied off.
+      core.io.dnD    := Cat(bidirIn(7, 0), inputIn(11, 4))
+      core.io.dnV    := bidirIn(8)
+      core.io.dnP    := bidirIn(9)
+      core.io.upCred := bidirIn(29)
+
+      core.io.dbgSel     := inputIn(1, 0)
+      core.io.linkNarrow := inputIn(2)
+      core.io.linkFast   := inputIn(3)
+
+      outVec(10) := core.io.dnCred
+      for (i <- 0 until 16) outVec(11 + i) := core.io.upD(i)
+      outVec(27) := core.io.upV
+      outVec(28) := core.io.upP
+      // bidir[29] = up_cred, an input lane -- no drive
+      outVec(30) := core.io.linkUp
+      outVec(31) := core.io.linkErr
+      for (i <- 0 until 6) outVec(32 + i) := dbgO(i)
+
+      oeVec(10) := true.B // dn_cred
+      for (i <- 11 until 29) oeVec(i) := true.B // up_d/up_v/up_p
+      oeVec(30) := true.B
+      oeVec(31) := true.B
+      for (i <- 32 until 38) oeVec(i) := true.B
+      // bidir[38..39] spare: left as inputs, undriven
+  }
+
+  bidirOut := outVec.asUInt
+  bidirOe  := oeVec.asUInt
 }

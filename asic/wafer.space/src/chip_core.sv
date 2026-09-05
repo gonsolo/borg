@@ -39,11 +39,19 @@ module chip_core #(
     inout  wire [NUM_ANALOG_PADS-1:0] analog  // Analog
 );
 
-    // This lane map only makes sense for exactly 46 bidir + 4 input pads
-    // (the 1x0.5 slot). A mismatched slot define would silently truncate/
-    // leave lanes unconnected below instead of failing loudly at elaboration.
-    if (NUM_BIDIR_PADS != 46 || NUM_INPUT_PADS != 4) begin : slot_mismatch
-        $error("chip_core: BorgOnlyTop's lane map requires NUM_BIDIR_PADS=46, NUM_INPUT_PADS=4 (the 1x0.5 slot) -- got %0d/%0d. Build with SLOT=1x0p5.", NUM_BIDIR_PADS, NUM_INPUT_PADS);
+    // BorgOnlyTop has a lane map for exactly two slots: 1x0.5 (46 bidir +
+    // 4 input) and 1x1 (40 bidir + 12 input). The emitted Verilog is built
+    // for one of them, so the pad counts must match what it was generated
+    // with -- a mismatch would silently truncate or leave lanes unconnected
+    // below instead of failing loudly at elaboration.
+    //
+    // NOTE: this only checks the pad *counts*. It cannot check that the
+    // BorgOnlyTop.sv in out/ was emitted for the same slot, since both maps
+    // present identical port widths for a given count. Emit with the matching
+    // Main (BorgOnlyMain / BorgOnly1x1Main) for the SLOT you build.
+    if (!((NUM_BIDIR_PADS == 46 && NUM_INPUT_PADS == 4) ||
+          (NUM_BIDIR_PADS == 40 && NUM_INPUT_PADS == 12))) begin : slot_mismatch
+        $error("chip_core: BorgOnlyTop's lane map supports NUM_BIDIR_PADS/NUM_INPUT_PADS of 46/4 (SLOT=1x0p5) or 40/12 (SLOT=1x1) -- got %0d/%0d.", NUM_BIDIR_PADS, NUM_INPUT_PADS);
     end
 
     // Not used: leave input pads with pulls disabled and analog untouched.
@@ -53,7 +61,14 @@ module chip_core #(
     logic _unused;
     assign _unused = &analog;
 
+    // Slot-specific module name, so building against the wrong slot's emission
+    // fails as "module not found" rather than silently resizing ports (yosys
+    // will happily connect a 46-bit net to a 40-bit port with only a warning).
+`ifdef SLOT_1X1
+    BorgOnlyTop1x1 i_borg (
+`else
     BorgOnlyTop i_borg (
+`endif
         .clk      (clk),
         .rst_n    (rst_n),
         .bidirIn  (bidir_in),
