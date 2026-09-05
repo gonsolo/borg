@@ -1682,9 +1682,22 @@ for combined depth-stencil) and the mandatory *sampled-image* format list
 format — worth a dedicated follow-up pass rather than assuming either way.
 
 **Explicitly NOT here — pure performance, not correctness, deferred to
-Step 53**: wider `fragLanes`, warp-level multithreading, multi-core
-scale-out. Neither Vulkan conformance nor vkQuake need any of these; CTS
-checks correctness within a generous timeout, not throughput.
+Step 53**: widening `fragLanes` *beyond* 4, warp-level multithreading,
+multi-core scale-out. Neither Vulkan conformance nor vkQuake need any of
+these; CTS checks correctness within a generous timeout, not throughput.
+
+**Correction, 2026-09-05**: `fragLanes=4` itself is NOT one of these --
+verified against `Vulkan-Docs`' `vk.xml` (`spirvcapability name=
+"DerivativeControl"`, `<enable version="VK_VERSION_1_0"/>` with no
+`feature=` gate, unlike e.g. `Geometry`/`Float64`): `OpDPdxFine`/
+`OpDPdyFine`/etc. are unconditionally mandatory, and plain `OpDPdx`/`OpDPdy`
+(what Borg already emits) don't even need their own capability, being part
+of baseline `Shader`. Borg's dFdx/dFdy (`FUNCT7_DDX`/`FUNCT7_DDY`, already
+used by `borgc cube.frag`) are hardwired to the 2x2 quad (`ddx = lane1 -
+lane0`, `ddy = lane2 - lane0`) and only exist at `fragLanes=4`
+(`BorgCore.scala`: "DDX/DDY are only emitted for the 4-lane fragment
+core"). So `fragLanes=4` is required hardware, already built and already
+in use -- not a droppable performance knob down to `fragLanes=1`.
 
 **Deadline framing**: the wafer.space submission deadline (2026-12-16, Step
 39) sets the outer bound for whatever hardware work lands before that
