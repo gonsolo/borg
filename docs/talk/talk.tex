@@ -182,14 +182,16 @@
           bridge. A direct path from Chisel to netlist to place-and-route
           would drop the lossy serialize/re-parse round-trip entirely.
     \item \textbf{Faster build/debug loops for OpenROAD and LibreLane
-          themselves.} A signoff run here takes hours; today alone,
-          isolating one failing step with LibreLane's
+          themselves.} OpenROAD is already moving this way on the build
+          side --- an active Bazel migration this year splitting out the
+          Qt GUI, de-flaking CI, and cutting build noise. On the debug
+          side: today alone, isolating one failing step with LibreLane's
           \texttt{create-reproducible}/\texttt{eject} tooling turned a
-          4-hour re-run into a 2-minute standalone probe --- and surfaced a
-          real, previously-unreported null-pointer crash in OpenROAD's
-          clock-tree synthesis (\texttt{TritonCTS}) in the process. More of
-          this: fast, debuggable iteration loops are as much a
-          contribution as the tapeout itself.
+          4-hour signoff re-run into a 2-minute standalone probe --- and
+          surfaced a real, previously-unreported null-pointer crash in
+          \texttt{TritonCTS} in the process. More of this: fast,
+          debuggable iteration loops are as much a contribution as the
+          tapeout itself.
   \end{itemize}
   \vfill
   \centering
