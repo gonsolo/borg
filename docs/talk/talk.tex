@@ -175,9 +175,12 @@
           middle.} Today's flow round-trips through a text HDL from the
           1980s purely as an interchange format: FIRRTL/CIRCT emits
           Verilog, then Yosys re-parses it from scratch. CIRCT's own
-          structural dialects already carry everything synthesis needs ---
-          a direct path from Chisel to netlist to place-and-route would
-          drop that lossy serialize/re-parse round-trip entirely.
+          structural dialects already carry everything synthesis needs;
+          early work already points this way ---
+          \texttt{YosysHQ/rtlil-mlir} is building an MLIR dialect for
+          Yosys's own RTLIL, aiming at exactly this CIRCT$\leftrightarrow$Yosys
+          bridge. A direct path from Chisel to netlist to place-and-route
+          would drop the lossy serialize/re-parse round-trip entirely.
     \item \textbf{Faster build/debug loops for OpenROAD and LibreLane
           themselves.} A signoff run here takes hours; today alone,
           isolating one failing step with LibreLane's
