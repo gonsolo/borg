@@ -168,6 +168,32 @@
   \end{itemize}
 \end{frame}
 
+% ── 8b: Future toolchain work ─────────────────────────────────────────────
+\begin{frame}{Where the Toolchain Goes Next}
+  \begin{itemize}[leftmargin=*]
+    \item \textbf{Chisel straight to GDS/OASIS --- no Verilog in the
+          middle.} Today's flow round-trips through a text HDL from the
+          1980s purely as an interchange format: FIRRTL/CIRCT emits
+          Verilog, then Yosys re-parses it from scratch. CIRCT's own
+          structural dialects already carry everything synthesis needs ---
+          a direct path from Chisel to netlist to place-and-route would
+          drop that lossy serialize/re-parse round-trip entirely.
+    \item \textbf{Faster build/debug loops for OpenROAD and LibreLane
+          themselves.} A signoff run here takes hours; today alone,
+          isolating one failing step with LibreLane's
+          \texttt{create-reproducible}/\texttt{eject} tooling turned a
+          4-hour re-run into a 2-minute standalone probe --- and surfaced a
+          real, previously-unreported null-pointer crash in OpenROAD's
+          clock-tree synthesis (\texttt{TritonCTS}) in the process. More of
+          this: fast, debuggable iteration loops are as much a
+          contribution as the tapeout itself.
+  \end{itemize}
+  \vfill
+  \centering
+  \textcolor{borgorange}{\textbf{The tools are libre. Making them fast to}}\\
+  \textcolor{borgorange}{\textbf{debug is part of the job, not a side quest.}}
+\end{frame}
+
 % ── 8c: Shared SoC proposal ───────────────────────────────────────────────
 \begin{frame}{Shared Silicon: Splitting a Tapeout, Not Just Sharing Tools}
   \begin{itemize}[leftmargin=*]
