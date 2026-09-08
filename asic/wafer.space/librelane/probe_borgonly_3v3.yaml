@@ -56,9 +56,31 @@ LIB:
 EXTRA_VERILOG_MODELS:
 - pdk_dir::libs.ref/gf180mcu_fd_io/verilog/gf180mcu_fd_io__blackbox_pp.v
 
-# Same LibreLane 3.0.3 read_timing_info bug as config.yaml -- see its comment.
-# Irrelevant to an area/timing probe either way.
+# PAD_LIBS is unusable -- see config.yaml's comment for the LibreLane bug
+# (still present on main as of 3.0.11, in TWO places: io.tcl:239 and :347).
+#
+# But leaving it null is NOT "irrelevant to a timing probe", which is what this
+# comment used to claim. With no pad timing model the clock cannot propagate
+# from clk_PAD through gf180mcu_fd_io__in_s into the core, so STA reports
+# "11987 unclocked register/latch pins", finds ZERO paths, and then cheerfully
+# reports zero setup/hold violations. That is a vacuous pass: every timing
+# number this flow has ever produced -- at 4 MHz and 25 MHz alike -- analysed
+# nothing. (Confirmed 2026-09-05: a 4 MHz run and a 25 MHz run produced
+# byte-identical design__instance__area, because the timing-driven resizer had
+# no paths to optimise against.)
+#
+# EXTRA_LIBS is the workaround: declared Optional[List[Path]] (a flat list),
+# which matches how io.tcl actually iterates it, unlike PAD_LIBS's
+# Dict[str, List[Path]]. gf180mcu_fd_io__in_s has a real combinational
+# PAD -> Y arc, so this is what lets the clock reach the 12k registers.
+#
+# Caveat: EXTRA_LIBS is "loaded indiscriminately for all timing corners", so
+# the pad is modelled at tt_025C_3v30 in every corner. For a buffer on the
+# clock path that is second-order -- insertion delay largely cancels between
+# launch and capture -- and vastly better than having no clock at all.
 PAD_LIBS: null
+EXTRA_LIBS:
+- pdk_dir::libs.ref/gf180mcu_fd_io/lib/gf180mcu_fd_io__tt_025C_3v30.lib
 
 VERILOG_FILES:
 - dir::../src/chip_top.sv
@@ -93,7 +115,7 @@ VERILOG_FILES:
 - dir::../../../out/hardware/borg/verilog_wafer/mem_32x16.sv
 - dir::../../../out/hardware/borg/verilog_wafer/ram_2x14.sv
 - dir::../../../out/hardware/borg/verilog_wafer/regFile.sv
-- dir::../../../out/hardware/borg/verilog_wafer/rgbzMems_16x64.sv
+- dir::../../../out/hardware/borg/verilog_wafer/rgbzMems_16x40.sv
 
 PRIMARY_GDSII_STREAMOUT_TOOL: klayout
 
