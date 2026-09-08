@@ -22,7 +22,7 @@ jobs:
         working-directory: asic/wafer.space
         run: |
           nix develop $GITHUB_WORKSPACE --command \
-            make librelane SLOT=0p5x1 | tee librelane.log
+            make librelane SLOT=1x1 | tee librelane.log
 
       - name: Verify manufacturability (Antenna / LVS / DRC)
         working-directory: asic/wafer.space
