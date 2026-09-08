@@ -168,30 +168,17 @@
   \end{itemize}
 \end{frame}
 
-% ── 8b: Future toolchain work ─────────────────────────────────────────────
+% ── 8b: Future toolchain work (wishlist) ──────────────────────────────────
 \begin{frame}{Where the Toolchain Goes Next}
+  \framesubtitle{\textcolor{borgorange}{Wishlist --- not started}}
   \begin{itemize}[leftmargin=*]
-    \item \textbf{Chisel straight to GDS/OASIS --- no Verilog in the
-          middle.} Today's flow round-trips through a text HDL from the
-          1980s purely as an interchange format: FIRRTL/CIRCT emits
-          Verilog, then Yosys re-parses it from scratch. CIRCT's own
-          structural dialects already carry everything synthesis needs;
-          early work already points this way ---
-          \texttt{YosysHQ/rtlil-mlir} is building an MLIR dialect for
-          Yosys's own RTLIL, aiming at exactly this CIRCT$\leftrightarrow$Yosys
-          bridge. A direct path from Chisel to netlist to place-and-route
-          would drop the lossy serialize/re-parse round-trip entirely.
-    \item \textbf{Faster build/debug loops for OpenROAD and LibreLane
-          themselves.} OpenROAD is already moving this way on the build
-          side --- an active Bazel migration this year splitting out the
-          Qt GUI, de-flaking CI, and cutting build noise. On the debug
-          side: today alone, isolating one failing step with LibreLane's
-          \texttt{create-reproducible}/\texttt{eject} tooling turned a
-          4-hour signoff re-run into a 2-minute standalone probe --- and
-          surfaced a real, previously-unreported null-pointer crash in
-          \texttt{TritonCTS} in the process. More of this: fast,
-          debuggable iteration loops are as much a contribution as the
-          tapeout itself.
+    \item \textbf{Chisel straight to GDS/OASIS --- no Verilog round-trip.}
+          CIRCT's structural dialects already carry what synthesis needs;
+          \texttt{YosysHQ/rtlil-mlir} points the same way.
+    \item \textbf{Faster OpenROAD/LibreLane build \& debug loops.} OpenROAD's
+          own Bazel migration is already moving this way; our
+          \texttt{create-reproducible}/\texttt{eject} trick turned a 4-hour
+          signoff re-run into a 2-minute probe this week.
   \end{itemize}
   \vfill
   \centering
@@ -199,22 +186,18 @@
   \textcolor{borgorange}{\textbf{debug is part of the job, not a side quest.}}
 \end{frame}
 
-% ── 8c: Shared SoC proposal ───────────────────────────────────────────────
+% ── 8c: Shared SoC proposal (wishlist) ────────────────────────────────────
 \begin{frame}{Shared Silicon: Splitting a Tapeout, Not Just Sharing Tools}
+  \framesubtitle{\textcolor{borgorange}{Wishlist --- looking for a partner}}
   \begin{itemize}[leftmargin=*]
-    \item Precedent already exists: \textbf{KianV} (RV32IMA + $\mu$Linux
-          SoC, Tiny Tapeout \texttt{ttgf0p3}), \textbf{Greyhound}
-          (RISC-V + tightly-coupled eFPGA, IHP SG13G2), a
-          \textbf{Chipyard + LibreLane} custom RISC-V build (f-si wiki),
-          Tiny Tapeout's \textbf{RISC-V Peripheral} competition
-    \item Proposal: a dedicated TT run --- or an $8\times8$ tile block ---
-          built \emph{together}, cost shared across contributors
-    \item Borg brings the \textbf{GPU} (Chisel, tile-based FP16 pipeline);
-          looking for a \textbf{CPU} (Chisel preferred) to drive it as an
-          MMIO peripheral --- the same contract Hutt already uses
+    \item Precedent: \textbf{KianV}, \textbf{Greyhound}, a
+          \textbf{Chipyard + LibreLane} build, TT's \textbf{RISC-V
+          Peripheral} competition
+    \item A shared TT run or $8\times8$ tile block, cost split across
+          contributors
+    \item Borg brings the \textbf{GPU}; looking for a \textbf{CPU} (Chisel
+          preferred) to drive it via Hutt's existing MMIO contract
     \item Interconnect: a stripped-down \textbf{TileLink / Diplomacy}
-          (Rocket Chip / Chipyard) --- enough to wire CPU, GPU, and other
-          peripherals without a bespoke bus per pairing
   \end{itemize}
   \vfill
   \centering
