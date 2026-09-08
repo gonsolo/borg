@@ -2,7 +2,7 @@ PDFLATEX = pdflatex
 
 .PHONY: all talk edit view clean
 
-all: talk
+all: view
 
 talk: talk.pdf
 
